@@ -1,8 +1,9 @@
 import pandas as pd
 import re
+import os
 
-# Read the Excel file
-file_path = r"1 Generate Page Links/ScrappedProducts.xlsx"
+# Read the Excel file (Excel file is in parent folder, script is in subfolder)
+file_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "ScrappedProducts.xlsx")
 df = pd.read_excel(file_path)
 
 # Display column names to verify
