@@ -15,11 +15,34 @@ print(df.head())
 item_col = None
 link_col = None
 
+# First, try to find exact "Item Number" column (prioritize this)
 for col in df.columns:
-    if 'item' in col.lower() and 'number' in col.lower():
+    if col.lower() == 'item number':
         item_col = col
+        break
+
+# If not found, look for columns containing "item" and "number" but exclude "stock" and "butted"
+if item_col is None:
+    for col in df.columns:
+        col_lower = col.lower()
+        if 'item' in col_lower and 'number' in col_lower:
+            # Exclude "Item Stock Number-Butted" and similar columns
+            if 'stock' not in col_lower and 'butted' not in col_lower:
+                item_col = col
+                break
+
+# If still not found, use any column with "item" and "number" (fallback)
+if item_col is None:
+    for col in df.columns:
+        if 'item' in col.lower() and 'number' in col.lower():
+            item_col = col
+            break
+
+# Find link column
+for col in df.columns:
     if 'link' in col.lower() and 'product' in col.lower():
         link_col = col
+        break
 
 if item_col is None or link_col is None:
     print("\nError: Could not find required columns")
@@ -29,119 +52,35 @@ if item_col is None or link_col is None:
 print(f"\nUsing Item Number column: {item_col}")
 print(f"Using Link column: {link_col}")
 
-# Get the first 2 non-null links to understand the pattern
-sample_links = []
-sample_items = []
-
+# Get the base URL pattern from existing links
+base_url = None
 for idx, row in df.iterrows():
     if pd.notna(row[link_col]) and str(row[link_col]).strip() != '':
-        sample_links.append(str(row[link_col]).strip())
-        sample_items.append(str(row[item_col]).strip() if pd.notna(row[item_col]) else '')
-        if len(sample_links) >= 2:
+        link = str(row[link_col]).strip()
+        # Extract base URL pattern: everything before the itemId parameter value
+        # Pattern: https://www.biggestbook.com/ui#/itemDetail?itemId=
+        match = re.search(r'(.+?itemId=)', link)
+        if match:
+            base_url = match.group(1)
+            print(f"Found base URL pattern: {base_url}")
             break
 
-print(f"\nSample Item Numbers: {sample_items}")
-print(f"Sample Links: {sample_links}")
+# If no existing link found, use the standard pattern
+if base_url is None:
+    base_url = "https://www.biggestbook.com/ui#/itemDetail?itemId="
+    print(f"Using default base URL pattern: {base_url}")
 
-# Analyze the pattern
-if len(sample_links) < 2:
-    print("\nError: Need at least 2 sample links to identify the pattern")
-    exit(1)
+# Function to generate link with exact Item Number
+def generate_link(item_number):
+    """Generate link using exact Item Number"""
+    return base_url + str(item_number).strip()
 
-# Try to identify the pattern
-# Common patterns: replace item number in URL, append item number, etc.
-link1 = sample_links[0]
-link2 = sample_links[1]
-item1 = sample_items[0]
-item2 = sample_items[1]
-
-print(f"\nAnalyzing pattern:")
-print(f"Link 1: {link1}")
-print(f"Item 1: {item1}")
-print(f"Link 2: {link2}")
-print(f"Item 2: {item2}")
-
-# Find where item numbers appear in the links
-def find_pattern(link1, item1, link2, item2):
-    """Try to identify the pattern between item numbers and links"""
-    # Check if item number is directly in the link
-    if item1 in link1 and item2 in link2:
-        # Find the position and pattern
-        idx1 = link1.find(item1)
-        idx2 = link2.find(item2)
-        
-        if idx1 == idx2:
-            # Same position, likely a direct replacement
-            prefix = link1[:idx1]
-            suffix = link1[idx1 + len(item1):]
-            
-            # Verify with second link
-            if link2.startswith(prefix) and link2.endswith(suffix):
-                return lambda item: prefix + str(item) + suffix
-    
-    # Check if it's a URL parameter pattern
-    # Look for patterns like ?id=ITEM or &item=ITEM or /ITEM/ or /ITEM.html
-    patterns = [
-        (rf'(\?[^=]*=){re.escape(item1)}([&/]|$)', rf'\1{re.escape(item2)}\2'),
-        (rf'(&[^=]*=){re.escape(item1)}([&/]|$)', rf'\1{re.escape(item2)}\2'),
-        (rf'/{re.escape(item1)}/', f'/{item2}/'),
-        (rf'/{re.escape(item1)}\.html', f'/{item2}.html'),
-        (rf'/{re.escape(item1)}$', f'/{item2}'),
-    ]
-    
-    for pattern, replacement in patterns:
-        test_link = re.sub(pattern, replacement, link1)
-        if test_link == link2:
-            return lambda item: re.sub(pattern, lambda m: m.group(1) + str(item) + (m.group(2) if len(m.groups()) > 1 else ''), link1)
-    
-    # Try simple replacement
-    if link1.replace(item1, item2) == link2:
-        return lambda item: link1.replace(item1, str(item))
-    
-    return None
-
-pattern_func = find_pattern(link1, item1, link2, item2)
-
-if pattern_func is None:
-    print("\nWarning: Could not automatically detect pattern. Trying manual analysis...")
-    # Try a more general approach - find common parts
-    common_prefix = ''
-    common_suffix = ''
-    
-    # Find longest common prefix
-    for i in range(min(len(link1), len(link2))):
-        if link1[i] == link2[i]:
-            common_prefix += link1[i]
-        else:
-            break
-    
-    # Find longest common suffix
-    for i in range(1, min(len(link1), len(link2)) + 1):
-        if link1[-i] == link2[-i]:
-            common_suffix = link1[-i] + common_suffix
-        else:
-            break
-    
-    print(f"Common prefix: {common_prefix}")
-    print(f"Common suffix: {common_suffix}")
-    
-    # Extract the variable part
-    if item1 in link1 and item2 in link2:
-        # Simple replacement pattern
-        pattern_func = lambda item, base_link=link1, base_item=item1: base_link.replace(base_item, str(item))
-    else:
-        print("\nError: Could not identify pattern. Please check the sample links manually.")
-        exit(1)
-
-# Generate links for all rows
-print("\nGenerating links for all rows...")
+# Generate links for all rows using exact Item Number
+print("\nGenerating links for all rows using exact Item Numbers...")
 generated_count = 0
+updated_count = 0
 
 for idx, row in df.iterrows():
-    # Skip if link already exists
-    if pd.notna(row[link_col]) and str(row[link_col]).strip() != '':
-        continue
-    
     # Get item number
     item_num = row[item_col]
     if pd.isna(item_num):
@@ -149,15 +88,27 @@ for idx, row in df.iterrows():
     
     item_num = str(item_num).strip()
     
-    # Generate link
-    try:
-        new_link = pattern_func(item_num)
-        df.at[idx, link_col] = new_link
+    # Generate correct link with exact Item Number
+    correct_link = generate_link(item_num)
+    
+    # Check if link needs to be updated
+    current_link = row[link_col]
+    if pd.isna(current_link) or str(current_link).strip() == '':
+        # No link exists, add it
+        df.at[idx, link_col] = correct_link
         generated_count += 1
-    except Exception as e:
-        print(f"Error generating link for row {idx}, item {item_num}: {e}")
+    else:
+        # Link exists, check if it's correct
+        current_link = str(current_link).strip()
+        if current_link != correct_link:
+            # Link is incorrect, update it
+            df.at[idx, link_col] = correct_link
+            updated_count += 1
+            print(f"  Updated row {idx + 1}: {item_num} - {current_link} -> {correct_link}")
 
-print(f"Generated {generated_count} new links")
+print(f"\nGenerated {generated_count} new links")
+print(f"Updated {updated_count} incorrect links")
+print(f"Total links processed: {generated_count + updated_count}")
 
 # Save back to the same Excel file
 print(f"\nSaving to {file_path}...")
