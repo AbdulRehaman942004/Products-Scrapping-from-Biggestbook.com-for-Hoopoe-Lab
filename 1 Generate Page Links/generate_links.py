@@ -1,3 +1,4 @@
+
 import pandas as pd
 import re
 import os
@@ -10,6 +11,7 @@ df = pd.read_excel(file_path)
 print("Column names:", df.columns.tolist())
 print("\nFirst few rows:")
 print(df.head())
+print("hi")
 
 # Find the columns (handle potential variations in naming)
 item_col = None
