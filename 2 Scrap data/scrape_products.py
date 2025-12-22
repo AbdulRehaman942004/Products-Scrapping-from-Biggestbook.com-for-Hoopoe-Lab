@@ -12,6 +12,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import TimeoutException, NoSuchElementException, InvalidSessionIdException, WebDriverException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
+from urllib3.exceptions import ReadTimeoutError, ConnectionError as Urllib3ConnectionError
+import socket
 
 # Path to Excel file (in parent folder)
 excel_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "ScrappedProducts.xlsx")
@@ -147,6 +149,8 @@ def setup_driver():
         
         driver = webdriver.Chrome(options=chrome_options)
         driver.implicitly_wait(3)  # Reduced from 10 to 3 seconds for faster failure detection
+        # Set page load timeout to prevent hanging (30 seconds max)
+        driver.set_page_load_timeout(30)
     return driver
 
 def recreate_driver():
@@ -163,6 +167,7 @@ def recreate_driver():
     
     driver = None
     print("\nRecreating Chrome driver (session was lost)...")
+    time.sleep(2)  # Brief pause before recreating to let connections close
     return setup_driver()
 
 def extract_unit_from_price(price_text):
@@ -199,7 +204,13 @@ def scrape_product_data(link, expected_unit, retry_count=0):
     """
     try:
         print(f"  Accessing: {link}")
-        driver.get(link)
+        # Use set_page_load_timeout to prevent hanging (already set in setup_driver, but ensure it's active)
+        try:
+            driver.set_page_load_timeout(30)  # 30 second timeout for page load
+            driver.get(link)
+        except TimeoutException:
+            print(f"    Page load timeout (30s) - skipping")
+            return "Timeout error", "Timeout error", "Timeout error", None
         
         # ULTRA-FAST DETECTION: Minimal wait, then immediately check for product
         try:
@@ -551,8 +562,16 @@ def scrape_product_data(link, expected_unit, retry_count=0):
         return product_name, description, image_url, website_unit
         
     except TimeoutException:
-        print(f"    Timeout loading page")
-        return None, None, None, None
+        print(f"    Page load timeout (30s)")
+        return "Timeout error", "Timeout error", "Timeout error", None
+    except (ReadTimeoutError, Urllib3ConnectionError, socket.timeout, ConnectionResetError) as e:
+        error_msg = str(e).lower()
+        if 'read timeout' in error_msg or 'connection' in error_msg or 'timeout' in error_msg:
+            print(f"    Connection timeout/error - marking as timeout")
+            return "Timeout error", "Timeout error", "Timeout error", None
+        else:
+            print(f"    Connection error: {e}")
+            return "Timeout error", "Timeout error", "Timeout error", None
     except (InvalidSessionIdException, WebDriverException) as e:
         error_msg = str(e).lower()
         if 'invalid session id' in error_msg or 'session id' in error_msg:
@@ -589,6 +608,10 @@ def scrape_product_data(link, expected_unit, retry_count=0):
             else:
                 print(f"    Browser session lost (max retries reached)")
                 return None, None, None, None
+        # Check for timeout/connection errors in generic exceptions
+        elif 'timeout' in error_msg or 'read timeout' in error_msg or 'connection' in error_msg:
+            print(f"    Timeout/connection error detected")
+            return "Timeout error", "Timeout error", "Timeout error", None
         else:
             print(f"    Error scraping: {e}")
             return None, None, None, None
@@ -658,6 +681,7 @@ def process_products(start_idx=0, end_idx=None, test_mode=False):
         if pd.notna(row[product_name_col]) and str(row[product_name_col]).strip() != '':
             product_name_value = str(row[product_name_col]).strip()
             # Skip if already has a real product name (not error messages)
+            # Note: "Timeout error" is NOT in this list, so timeout errors will be retried
             if product_name_value not in ['Unit not matched', 'Product not found']:
                 print("  Already scraped, skipping...")
                 skipped_count += 1
@@ -672,24 +696,29 @@ def process_products(start_idx=0, end_idx=None, test_mode=False):
                 print("  Already marked as 'Unit not matched', skipping...")
                 skipped_count += 1
                 continue
+            # Allow "Timeout error" products to be retried (timeouts might be temporary)
+            # elif product_name_value == 'Timeout error':
+            #     print("  Already marked as 'Timeout error', skipping...")
+            #     skipped_count += 1
+            #     continue
         
-        # Scrape data (with retry on session loss)
-        max_retries = 2
+        # Scrape data (with retry on session loss, but not for timeout errors)
+        max_retries = 1  # Reduced retries to avoid getting stuck
         retry_count = 0
         product_name, description, image_url, website_unit = None, None, None, None
         
         while retry_count <= max_retries:
             product_name, description, image_url, website_unit = scrape_product_data(str(link).strip(), expected_unit)
             
-            # If we got results (even if error), break
-            if product_name is not None or retry_count >= max_retries:
+            # If we got results (even if error like "Timeout error"), break immediately
+            if product_name is not None:
                 break
             
-            # If we got None, None, None, None and it might be a session issue, retry
+            # If we got None, None, None, None and it might be a session issue, retry once
             retry_count += 1
             if retry_count <= max_retries:
                 print(f"    Retrying ({retry_count}/{max_retries})...")
-                time.sleep(1)  # Brief pause before retry
+                time.sleep(2)  # Longer pause before retry to let connections reset
         
         # Update Excel row
         if product_name == "Unit not matched":
@@ -701,6 +730,11 @@ def process_products(start_idx=0, end_idx=None, test_mode=False):
             df.at[idx, product_name_col] = "Product not found"
             df.at[idx, description_col] = "Product not found"
             df.at[idx, image_url_col] = "Product not found"
+            processed_count += 1
+        elif product_name == "Timeout error":
+            df.at[idx, product_name_col] = "Timeout error"
+            df.at[idx, description_col] = "Timeout error"
+            df.at[idx, image_url_col] = "Timeout error"
             processed_count += 1
         elif product_name:
             df.at[idx, product_name_col] = product_name
