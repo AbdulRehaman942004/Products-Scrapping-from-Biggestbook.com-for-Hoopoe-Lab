@@ -1,578 +1,101 @@
-Row 1603/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=HFA12408
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=HFA12408
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=HFA12408
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1604/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=HFA51210
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=HFA51210
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=HFA51210
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1605/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=HFA51215
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=HFA51215
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=HFA51215
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1606/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=HFA51415
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=HFA51415
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=HFA51415
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1607/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=HFA51808
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=HFA51808
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=HFA51808
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1608/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=HFA58100
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=HFA58100
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=HFA58100
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1609/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=OIC26042
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=OIC26042
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=OIC26042
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1610/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNCU3660GY
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNCU3660GY
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNCU3660GY
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1611/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=FAO12001
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=FAO12001
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=FAO12001
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1612/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=JOJ512376900
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=JOJ512376900
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=JOJ512376900
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1613/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=PFI512373700
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=PFI512373700
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=PFI512373700
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1614/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNCU2436BK
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNCU2436BK
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNCU2436BK
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1615/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNCU2436GY
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNCU2436GY
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNCU2436GY
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1616/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNCU3660BK
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNCU3660BK
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNCU3660BK
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1617/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNCU3660SB
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNCU3660SB
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNCU3660SB
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1618/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNCU3672BK
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNCU3672BK
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNCU3672BK
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1619/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNCU3672GY
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNCU3672GY
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNCU3672GY
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1620/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNFL2436BK
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNFL2436BK
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNFL2436BK
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1621/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNFL2436GY
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNFL2436GY
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNFL2436GY
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1622/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNFL2436KD
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNFL2436KD
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNFL2436KD
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1623/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNFL3610GY
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNFL3610GY
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNFL3610GY
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1624/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNFL3612BK
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNFL3612BK
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNFL3612BK
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1625/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNFL3660KD
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNFL3660KD
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNFL3660KD
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1626/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNWBZ035KD
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNWBZ035KD
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CWNWBZ035KD
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1627/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=DEFAFP1824
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=DEFAFP1824
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=DEFAFP1824
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1628/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=DEFAFP2436
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=DEFAFP2436
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=DEFAFP2436
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1629/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=EGO18385
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=EGO18385
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=EGO18385
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1630/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=MLL44030550
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=MLL44030550
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=MLL44030550
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1631/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CPC96299
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CPC96299
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CPC96299
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1632/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=DIA07686
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=DIA07686
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=DIA07686
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1633/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=PGC03950
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=PGC03950
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=PGC03950
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1634/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CPC94020
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CPC94020
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CPC94020
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1635/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=DVOCB564300
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=DVOCB564300
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=DVOCB564300
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1636/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=OLS01643CT
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=OLS01643CT
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=OLS01643CT
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1637/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=PGC00162
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=PGC00162
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=PGC00162
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1638/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=PGC00162EA
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=PGC00162EA
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=PGC00162EA
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1639/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=PGC12442
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=PGC12442
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=PGC12442
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1640/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=PGC31384
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=PGC31384
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=PGC31384
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1641/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=PGC31384EA
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=PGC31384EA
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=PGC31384EA
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1642/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=UNI15229CT
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=UNI15229CT
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=UNI15229CT
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1643/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=UNI15229EA
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=UNI15229EA
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=UNI15229EA
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1644/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=UNI66801CT
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=UNI66801CT
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=UNI66801CT
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1645/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=UNI66801EA
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=UNI66801EA
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=UNI66801EA
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1646/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=ANS44302
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=ANS44302
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=ANS44302
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1647/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=ANS44303
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=ANS44303
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=ANS44303
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1648/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=ANS44307
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=ANS44307
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=ANS44307
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1649/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=ANS45667
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=ANS45667
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=ANS45667
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1650/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=ANS46102
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=ANS46102
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=ANS46102
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1651/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=ANS46107
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=ANS46107
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=ANS46107
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1652/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=ANS46116
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=ANS46116
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=ANS46116
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1653/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=ANS46124
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=ANS46124
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=ANS46124
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1654/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=ANS46127
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=ANS46127
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=ANS46127
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-Row 1655/18409 (Processing 650/18409):
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=ANS49002
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (1/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=ANS49002
-    Error scraping: HTTPConnectionPool(host='localhost', port=59543): Read timed out. (read timeout=120)
-    Retrying (2/2)...
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=ANS49002
-    Browser session lost. Recreating driver and retrying...
+Saving progress...
+Progress saved! (Processed: 190, Skipped: 1211, Errors: 0)
 
-Recreating Chrome driver (session was lost)...
+Row 1402/18409 (Processing 191/18409):
+  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=BGD351
+    Page load timeout (30s) - skipping
+Row 1403/18409 (Processing 192/18409):
+  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=BWK901
+    Page load timeout (30s) - skipping
+Row 1404/18409 (Processing 193/18409):
+  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=BWK902
+    Page load timeout (30s) - skipping
+Row 1405/18409 (Processing 194/18409):
+  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=BWK903
+    Page load timeout (30s) - skipping
+Row 1406/18409 (Processing 195/18409):
+  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=BWK904
+    Page load timeout (30s) - skipping
+Row 1407/18409 (Processing 196/18409):
+  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=BGD464
+    Page load timeout (30s) - skipping
+Row 1408/18409 (Processing 197/18409):
+  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=RAC77961
+    Page load timeout (30s) - skipping
+Row 1409/18409 (Processing 198/18409):
+  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=RAC78283
+    Page load timeout (30s) - skipping
+Row 1410/18409 (Processing 199/18409):
+  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=RAC79553
+    Page load timeout (30s) - skipping
+Row 1411/18409 (Processing 200/18409):
+  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=RAC82093CT
+    Page load timeout (30s) - skipping
 
-Setting up Chrome driver...
-    Retrying: https://www.biggestbook.com/ui#/itemDetail?itemId=ANS49002
-  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=ANS49002
-Traceback (most recent call last):
-  File "C:\Users\Dell\Desktop\Products-Scrapping-from-Biggestbook.com-for-Hoopoe-Lab\2 Scrap data\scrape_products.py", line 202, in scrape_product_data
-    driver.get(link)
-  File "C:\Users\Dell\AppData\Local\Programs\Python\Python312\Lib\site-packages\selenium\webdriver\remote\webdriver.py", line 452, in get
-    self.execute(Command.GET, {"url": url})
-  File "C:\Users\Dell\AppData\Local\Programs\Python\Python312\Lib\site-packages\selenium\webdriver\remote\webdriver.py", line 432, in execute
-    self.error_handler.check_response(response)
-  File "C:\Users\Dell\AppData\Local\Programs\Python\Python312\Lib\site-packages\selenium\webdriver\remote\errorhandler.py", line 232, in check_response
-    raise exception_class(message, screen, stacktrace)
-selenium.common.exceptions.InvalidSessionIdException: Message: invalid session id; For documentation on this error, please visit: https://www.selenium.dev/documentation/webdriver/troubleshooting/errors#invalidsessionidexception
-Stacktrace:
-Symbols not available. Dumping unresolved backtrace:
-        0x7ff6860288e5
-        0x7ff686028940
-        0x7ff685e01465
-        0x7ff685e4a832
-        0x7ff685e4ba93
-        0x7ff686340640
-        0x7ff68633af80
-        0x7ff6863596e6
-        0x7ff686045de4
-        0x7ff68604ed8c
-        0x7ff686032004
-        0x7ff6860321b5
-        0x7ff686017ee2
-        0x7ffcbf0ae8d7
-        0x7ffcc05cc53c
+Saving progress...
+Progress saved! (Processed: 200, Skipped: 1211, Errors: 0)
 
+Row 1412/18409 (Processing 201/18409):
+  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=RAC82314
+    Page load timeout (30s) - skipping
+Row 1413/18409 (Processing 202/18409):
+  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=RAC91099
+    Page load timeout (30s) - skipping
+Row 1414/18409 (Processing 203/18409):
+  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=RAC91101
+    Page load timeout (30s) - skipping
+Row 1415/18409 (Processing 204/18409):
+  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=SJN346578PK
+    Page load timeout (30s) - skipping
+Row 1416/18409 (Processing 205/18409):
+  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=SJN346580PK
+    Page load timeout (30s) - skipping
+Row 1417/18409 (Processing 206/18409):
+  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=TMS1042686
+    Page load timeout (30s) - skipping
+Row 1418/18409 (Processing 207/18409):
+  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=TMS1042712
+    Page load timeout (30s) - skipping
+Row 1419/18409 (Processing 208/18409):
+  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=TMS1042756
+    Page load timeout (30s) - skipping
+Row 1420/18409 (Processing 209/18409):
+  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=TMS1042757
+    Page load timeout (30s) - skipping
+Row 1421/18409 (Processing 210/18409):
+  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=TMS1042771
+    Page load timeout (30s) - skipping
 
-During handling of the above exception, another exception occurred:
+Saving progress...
+Progress saved! (Processed: 210, Skipped: 1211, Errors: 0)
 
-Traceback (most recent call last):
-  File "C:\Users\Dell\AppData\Local\Programs\Python\Python312\Lib\http\client.py", line 1430, in getresponse
-    response.begin()
-  File "C:\Users\Dell\AppData\Local\Programs\Python\Python312\Lib\http\client.py", line 331, in begin
-    version, status, reason = self._read_status()
-                              ^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Dell\AppData\Local\Programs\Python\Python312\Lib\http\client.py", line 292, in _read_status
-    line = str(self.fp.readline(_MAXLINE + 1), "iso-8859-1")
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Dell\AppData\Local\Programs\Python\Python312\Lib\socket.py", line 720, in readinto
-    return self._sock.recv_into(b)
-           ^^^^^^^^^^^^^^^^^^^^^^^
-ConnectionResetError: [WinError 10054] An existing connection was forcibly closed by the remote host
-
-During handling of the above exception, another exception occurred:
-
-Traceback (most recent call last):
-  File "C:\Users\Dell\Desktop\Products-Scrapping-from-Biggestbook.com-for-Hoopoe-Lab\2 Scrap data\scrape_products.py", line 897, in <module>
-    process_products(0, total_rows - 1)
-  File "C:\Users\Dell\Desktop\Products-Scrapping-from-Biggestbook.com-for-Hoopoe-Lab\2 Scrap data\scrape_products.py", line 682, in process_products
-    product_name, description, image_url, website_unit = scrape_product_data(str(link).strip(), expected_unit)
-                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Dell\Desktop\Products-Scrapping-from-Biggestbook.com-for-Hoopoe-Lab\2 Scrap data\scrape_products.py", line 565, in scrape_product_data
-    return scrape_product_data(link, expected_unit, retry_count + 1)  # Recursive retry
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Dell\Desktop\Products-Scrapping-from-Biggestbook.com-for-Hoopoe-Lab\2 Scrap data\scrape_products.py", line 202, in scrape_product_data
-    driver.get(link)
-  File "C:\Users\Dell\AppData\Local\Programs\Python\Python312\Lib\site-packages\selenium\webdriver\remote\webdriver.py", line 452, in get
-    self.execute(Command.GET, {"url": url})
-  File "C:\Users\Dell\AppData\Local\Programs\Python\Python312\Lib\site-packages\selenium\webdriver\remote\webdriver.py", line 429, in execute
-    response = cast(RemoteConnection, self.command_executor).execute(driver_command, params)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Dell\AppData\Local\Programs\Python\Python312\Lib\site-packages\selenium\webdriver\remote\remote_connection.py", line 405, in execute
-    return self._request(command_info[0], url, body=data)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Dell\AppData\Local\Programs\Python\Python312\Lib\site-packages\selenium\webdriver\remote\remote_connection.py", line 429, in _request
-    response = self._conn.request(method, url, body=body, headers=headers, timeout=self._client_config.timeout)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Dell\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\_request_methods.py", line 143, in request
-    return self.request_encode_body(
-           ^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Dell\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\_request_methods.py", line 278, in request_encode_body
-    return self.urlopen(method, url, **extra_kw)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Dell\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\poolmanager.py", line 457, in urlopen
-    response = conn.urlopen(method, u.request_uri, **kw)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Dell\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\connectionpool.py", line 787, in urlopen
-    response = self._make_request(
-               ^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Dell\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\connectionpool.py", line 534, in _make_request
-    response = conn.getresponse()
-               ^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Dell\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\connection.py", line 571, in getresponse
-    httplib_response = super().getresponse()
-                       ^^^^^^^^^^^^^^^^^^^^^
-  File "C:\Users\Dell\AppData\Local\Programs\Python\Python312\Lib\http\client.py", line 1432, in getresponse
-    self.close()
-  File "C:\Users\Dell\AppData\Local\Programs\Python\Python312\Lib\site-packages\urllib3\connection.py", line 375, in close
-    def close(self) -> None:
-
-KeyboardInterrupt
-PS C:\Users\Dell\Desktop\Products-Scrapping-from-Biggestbook.com-for-Hoopoe-Lab\2 Scrap data> ^C
-PS C:\Users\Dell\Desktop\Products-Scrapping-from-Biggestbook.com-for-Hoopoe-Lab\2 Scrap data>          
+Row 1422/18409 (Processing 211/18409):
+  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=TMS1042786
+    Page load timeout (30s) - skipping
+Row 1423/18409 (Processing 212/18409):
+  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=TMS1042818
+    Page load timeout (30s) - skipping
+Row 1424/18409 (Processing 213/18409):
+  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=BGD451
+    Page load timeout (30s) - skipping
+Row 1425/18409 (Processing 214/18409):
+  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=BGD463
+    Page load timeout (30s) - skipping
+Row 1426/18409 (Processing 215/18409):
+  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=BGD472
+    Page load timeout (30s) - skipping
+Row 1427/18409 (Processing 216/18409):
+  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CHP5169
+    Page load timeout (30s) - skipping
+Row 1428/18409 (Processing 217/18409):
+  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CHP5180
+    Page load timeout (30s) - skipping
+Row 1429/18409 (Processing 218/18409):
+  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CHP5182
+    Page load timeout (30s) - skipping
+Row 1430/18409 (Processing 219/18409):
+  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CHP5185
+    Page load timeout (30s) - skipping
+Row 1431/18409 (Processing 220/18409):
+  Accessing: https://www.biggestbook.com/ui#/itemDetail?itemId=CHP5187
+    Page load timeout (30s) - skipping
