@@ -1,5 +1,6 @@
 import pandas as pd
 import os
+import sys
 import re
 import time
 import shutil
@@ -22,7 +23,47 @@ MAX_BACKUPS = 5  # Keep last 5 backups
 
 # Read the Excel file
 print("Reading Excel file...")
-df = pd.read_excel(excel_path)
+try:
+    # Check if file exists
+    if not os.path.exists(excel_path):
+        print(f"ERROR: Excel file not found at: {excel_path}")
+        print("Please make sure the file exists and the path is correct.")
+        sys.exit(1)
+    
+    # Check if file is accessible (not locked by another program)
+    try:
+        # Try to open the file to check if it's locked
+        test_file = open(excel_path, 'r+b')
+        test_file.close()
+    except PermissionError:
+        print(f"ERROR: Excel file is locked or in use!")
+        print("Please close the Excel file if it's open and try again.")
+        sys.exit(1)
+    except Exception as e:
+        print(f"ERROR: Cannot access Excel file: {e}")
+        sys.exit(1)
+    
+    # Try to read the Excel file
+    df = pd.read_excel(excel_path)
+    print(f"Successfully loaded Excel file with {len(df)} rows")
+    
+except pd.errors.EmptyDataError:
+    print(f"ERROR: Excel file is empty: {excel_path}")
+    sys.exit(1)
+except Exception as e:
+    error_msg = str(e).lower()
+    if 'badzipfile' in error_msg or 'not a zip file' in error_msg:
+        print(f"ERROR: Excel file appears to be corrupted or not a valid Excel file!")
+        print(f"File path: {excel_path}")
+        print("Possible causes:")
+        print("  1. File is corrupted - try opening it in Excel and saving again")
+        print("  2. File is currently open in Excel - close it and try again")
+        print("  3. File is not actually an Excel file - check the file extension")
+        print(f"\nError details: {e}")
+    else:
+        print(f"ERROR: Failed to read Excel file: {e}")
+        print(f"File path: {excel_path}")
+    sys.exit(1)
 
 # Find the required columns
 link_col = None
@@ -147,10 +188,29 @@ def setup_driver():
         chrome_options.add_argument('--password-store=basic')
         chrome_options.add_argument('--use-mock-keychain')
         
+        # Additional options to prevent getting stuck:
+        # Disable images to reduce load time and prevent hanging on slow image loads
+        chrome_options.add_argument('--blink-settings=imagesEnabled=false')
+        chrome_options.add_argument('--disable-plugins')  # Disable plugins
+        chrome_options.add_argument('--disable-software-rasterizer')  # Reduce GPU issues
+        chrome_options.add_argument('--disable-web-security')  # Sometimes helps with CORS issues
+        chrome_options.add_argument('--disable-features=TranslateUI')  # Disable translation UI
+        chrome_options.add_argument('--disable-ipc-flooding-protection')  # Prevent IPC issues
+        
+        # Set preferences to limit resource loading
+        prefs = {
+            "profile.managed_default_content_settings.images": 2,  # Block images
+            "profile.default_content_setting_values.notifications": 2,  # Block notifications
+            "profile.default_content_settings.popups": 0,  # Allow popups (might be needed)
+        }
+        chrome_options.add_experimental_option("prefs", prefs)
+        
         driver = webdriver.Chrome(options=chrome_options)
         driver.implicitly_wait(3)  # Reduced from 10 to 3 seconds for faster failure detection
         # Set page load timeout to prevent hanging (30 seconds max)
         driver.set_page_load_timeout(30)
+        # Set script timeout to prevent JS from hanging
+        driver.set_script_timeout(30)
     return driver
 
 def recreate_driver():
@@ -209,7 +269,18 @@ def scrape_product_data(link, expected_unit, retry_count=0):
             driver.set_page_load_timeout(30)  # 30 second timeout for page load
             driver.get(link)
         except TimeoutException:
-            print(f"    Page load timeout (30s) - skipping")
+            print(f"    Page load timeout (30s) - stopping page load and skipping")
+            try:
+                # Stop the page from loading to prevent browser from getting stuck
+                driver.execute_script("window.stop();")
+            except:
+                pass  # Ignore if we can't execute script (browser might be unresponsive)
+            try:
+                # Navigate to about:blank to reset browser state
+                driver.get("about:blank")
+            except:
+                pass  # Ignore if navigation fails
+            time.sleep(0.5)  # Brief pause to let browser recover
             return "Timeout error", "Timeout error", "Timeout error", None
         
         # ULTRA-FAST DETECTION: Minimal wait, then immediately check for product
@@ -562,7 +633,18 @@ def scrape_product_data(link, expected_unit, retry_count=0):
         return product_name, description, image_url, website_unit
         
     except TimeoutException:
-        print(f"    Page load timeout (30s)")
+        print(f"    Page load timeout (30s) - stopping page load")
+        try:
+            # Stop the page from loading to prevent browser from getting stuck
+            driver.execute_script("window.stop();")
+        except:
+            pass  # Ignore if we can't execute script
+        try:
+            # Navigate to about:blank to reset browser state
+            driver.get("about:blank")
+        except:
+            pass  # Ignore if navigation fails
+        time.sleep(0.5)  # Brief pause to let browser recover
         return "Timeout error", "Timeout error", "Timeout error", None
     except (ReadTimeoutError, Urllib3ConnectionError, socket.timeout, ConnectionResetError) as e:
         error_msg = str(e).lower()
@@ -659,111 +741,157 @@ def process_products(start_idx=0, end_idx=None, test_mode=False):
     skipped_count = 0
     error_count = 0
     
-    for idx in range(start_idx, end_idx + 1):
-        row = df.iloc[idx]
-        print(f"Row {idx + 1}/{len(df)} (Processing {processed_count + 1}/{total_to_process}):")
-        
-        # Get link
-        link = row[link_col]
-        if pd.isna(link) or str(link).strip() == '':
-            print("  No link found, skipping...")
-            skipped_count += 1
-            continue
-        
-        # Get expected unit
-        expected_unit = row[unit_col]
-        if pd.isna(expected_unit):
-            print("  No unit of measure found, skipping...")
-            skipped_count += 1
-            continue
-        
-        # Check if already scraped (skip if Product Name is already filled)
-        if pd.notna(row[product_name_col]) and str(row[product_name_col]).strip() != '':
-            product_name_value = str(row[product_name_col]).strip()
-            # Skip if already has a real product name (not error messages)
-            # Note: "Timeout error" is NOT in this list, so timeout errors will be retried
-            if product_name_value not in ['Unit not matched', 'Product not found']:
-                print("  Already scraped, skipping...")
-                skipped_count += 1
-                continue
-            # Skip if already marked as "Product not found" (to avoid re-checking unavailable products)
-            elif product_name_value == 'Product not found':
-                print("  Already marked as 'Product not found', skipping...")
-                skipped_count += 1
-                continue
-            # Skip if already marked as "Unit not matched" (to avoid re-checking products with wrong units)
-            elif product_name_value == 'Unit not matched':
-                print("  Already marked as 'Unit not matched', skipping...")
-                skipped_count += 1
-                continue
-            # Allow "Timeout error" products to be retried (timeouts might be temporary)
-            # elif product_name_value == 'Timeout error':
-            #     print("  Already marked as 'Timeout error', skipping...")
-            #     skipped_count += 1
-            #     continue
-        
-        # Scrape data (with retry on session loss, but not for timeout errors)
-        max_retries = 1  # Reduced retries to avoid getting stuck
-        retry_count = 0
-        product_name, description, image_url, website_unit = None, None, None, None
-        
-        while retry_count <= max_retries:
-            product_name, description, image_url, website_unit = scrape_product_data(str(link).strip(), expected_unit)
-            
-            # If we got results (even if error like "Timeout error"), break immediately
-            if product_name is not None:
-                break
-            
-            # If we got None, None, None, None and it might be a session issue, retry once
-            retry_count += 1
-            if retry_count <= max_retries:
-                print(f"    Retrying ({retry_count}/{max_retries})...")
-                time.sleep(2)  # Longer pause before retry to let connections reset
-        
-        # Update Excel row
-        if product_name == "Unit not matched":
-            df.at[idx, product_name_col] = "Unit not matched"
-            df.at[idx, description_col] = "Unit not matched"
-            df.at[idx, image_url_col] = "Unit not matched"
-            processed_count += 1
-        elif product_name == "Product not found":
-            df.at[idx, product_name_col] = "Product not found"
-            df.at[idx, description_col] = "Product not found"
-            df.at[idx, image_url_col] = "Product not found"
-            processed_count += 1
-        elif product_name == "Timeout error":
-            df.at[idx, product_name_col] = "Timeout error"
-            df.at[idx, description_col] = "Timeout error"
-            df.at[idx, image_url_col] = "Timeout error"
-            processed_count += 1
-        elif product_name:
-            df.at[idx, product_name_col] = product_name
-            if description:
-                df.at[idx, description_col] = description
-            if image_url:
-                df.at[idx, image_url_col] = image_url
-            processed_count += 1
-        else:
-            error_count += 1
-        
-        # Save progress (every 10 products)
-        if processed_count % 10 == 0 and processed_count > 0:
-            print(f"\nSaving progress...")
+    # Function to safely save progress
+    def save_progress_safely():
+        """Safely save the Excel file"""
+        try:
+            print(f"\nSaving progress before exit...")
             df.to_excel(excel_path, index=False)
-            print(f"Progress saved! (Processed: {processed_count}, Skipped: {skipped_count}, Errors: {error_count})\n")
+            print(f"Progress saved successfully! (Processed: {processed_count}, Skipped: {skipped_count}, Errors: {error_count})")
+            return True
+        except Exception as e:
+            print(f"ERROR: Failed to save progress: {e}")
+            # Try to save to a backup location
+            try:
+                backup_path = excel_path.replace('.xlsx', '_emergency_backup.xlsx')
+                df.to_excel(backup_path, index=False)
+                print(f"Emergency backup saved to: {backup_path}")
+                return True
+            except Exception as backup_error:
+                print(f"ERROR: Failed to create emergency backup: {backup_error}")
+                return False
+    
+    try:
+        for idx in range(start_idx, end_idx + 1):
+            row = df.iloc[idx]
+            print(f"Row {idx + 1}/{len(df)} (Processing {processed_count + 1}/{total_to_process}):")
+            
+            # Get link
+            link = row[link_col]
+            if pd.isna(link) or str(link).strip() == '':
+                print("  No link found, skipping...")
+                skipped_count += 1
+                continue
+            
+            # Get expected unit
+            expected_unit = row[unit_col]
+            if pd.isna(expected_unit):
+                print("  No unit of measure found, skipping...")
+                skipped_count += 1
+                continue
+            
+            # Check if already scraped (skip if Product Name is already filled)
+            if pd.notna(row[product_name_col]) and str(row[product_name_col]).strip() != '':
+                product_name_value = str(row[product_name_col]).strip()
+                # Skip if already has a real product name (not error messages)
+                # Note: "Timeout error" is NOT in this list, so timeout errors will be retried
+                if product_name_value not in ['Unit not matched', 'Product not found']:
+                    print("  Already scraped, skipping...")
+                    skipped_count += 1
+                    continue
+                # Skip if already marked as "Product not found" (to avoid re-checking unavailable products)
+                elif product_name_value == 'Product not found':
+                    print("  Already marked as 'Product not found', skipping...")
+                    skipped_count += 1
+                    continue
+                # Skip if already marked as "Unit not matched" (to avoid re-checking products with wrong units)
+                elif product_name_value == 'Unit not matched':
+                    print("  Already marked as 'Unit not matched', skipping...")
+                    skipped_count += 1
+                    continue
+                # Allow "Timeout error" products to be retried (timeouts might be temporary)
+                # elif product_name_value == 'Timeout error':
+                #     print("  Already marked as 'Timeout error', skipping...")
+                #     skipped_count += 1
+                #     continue
+            
+            # Scrape data (with retry on session loss, but not for timeout errors)
+            max_retries = 1  # Reduced retries to avoid getting stuck
+            retry_count = 0
+            product_name, description, image_url, website_unit = None, None, None, None
+            
+            while retry_count <= max_retries:
+                product_name, description, image_url, website_unit = scrape_product_data(str(link).strip(), expected_unit)
+                
+                # If we got results (even if error like "Timeout error"), break immediately
+                if product_name is not None:
+                    break
+                
+                # If we got None, None, None, None and it might be a session issue, retry once
+                retry_count += 1
+                if retry_count <= max_retries:
+                    print(f"    Retrying ({retry_count}/{max_retries})...")
+                    time.sleep(2)  # Longer pause before retry to let connections reset
+            
+            # Update Excel row
+            if product_name == "Unit not matched":
+                df.at[idx, product_name_col] = "Unit not matched"
+                df.at[idx, description_col] = "Unit not matched"
+                df.at[idx, image_url_col] = "Unit not matched"
+                processed_count += 1
+            elif product_name == "Product not found":
+                df.at[idx, product_name_col] = "Product not found"
+                df.at[idx, description_col] = "Product not found"
+                df.at[idx, image_url_col] = "Product not found"
+                processed_count += 1
+            elif product_name == "Timeout error":
+                df.at[idx, product_name_col] = "Timeout error"
+                df.at[idx, description_col] = "Timeout error"
+                df.at[idx, image_url_col] = "Timeout error"
+                processed_count += 1
+            elif product_name:
+                df.at[idx, product_name_col] = product_name
+                if description:
+                    df.at[idx, description_col] = description
+                if image_url:
+                    df.at[idx, image_url_col] = image_url
+                processed_count += 1
+            else:
+                error_count += 1
+            
+            # Save progress (every 10 products)
+            if processed_count % 10 == 0 and processed_count > 0:
+                print(f"\nSaving progress...")
+                df.to_excel(excel_path, index=False)
+                print(f"Progress saved! (Processed: {processed_count}, Skipped: {skipped_count}, Errors: {error_count})\n")
+            
+            # Small delay to avoid overwhelming the server (reduced)
+            time.sleep(0.5)
+            
+            # Check if browser is still responsive (quick check to prevent getting stuck)
+            try:
+                driver.current_url  # Simple check to see if browser is responsive
+            except (InvalidSessionIdException, WebDriverException, Exception) as e:
+                # Browser became unresponsive, recreate driver
+                error_msg = str(e).lower()
+                if 'timeout' in error_msg or 'session' in error_msg or 'connection' in error_msg:
+                    print(f"    Browser unresponsive, recreating driver...")
+                    try:
+                        recreate_driver()
+                    except:
+                        print(f"    Failed to recreate driver, will try on next product")
         
-        # Small delay to avoid overwhelming the server (reduced)
-        time.sleep(0.5)
+        # Final save (normal completion)
+        print(f"\nSaving final results...")
+        df.to_excel(excel_path, index=False)
+        
+        # Create backup after completion
+        print("Creating backup after completion...")
+        create_backup()
+        
+        print(f"\nDone! Processed: {processed_count}, Skipped: {skipped_count}, Errors: {error_count}")
     
-    # Final save
-    print(f"\nSaving final results...")
-    df.to_excel(excel_path, index=False)
-    
-    # Create backup after completion
-    print("Creating backup after completion...")
-    create_backup()
-    
-    print(f"\nDone! Processed: {processed_count}, Skipped: {skipped_count}, Errors: {error_count}")
+    except KeyboardInterrupt:
+        # User pressed Ctrl+C - save progress before exiting
+        print("\n\n" + "="*60)
+        print("INTERRUPTED BY USER (Ctrl+C)")
+        print("="*60)
+        print(f"\nSaving progress before exit...")
+        save_progress_safely()
+        print(f"\nProgress saved! You can resume from where you left off.")
+        print(f"Processed: {processed_count}, Skipped: {skipped_count}, Errors: {error_count}")
+        print("\nExiting gracefully...")
+        raise  # Re-raise to exit the function
 
 def display_menu():
     """Display the main menu"""
