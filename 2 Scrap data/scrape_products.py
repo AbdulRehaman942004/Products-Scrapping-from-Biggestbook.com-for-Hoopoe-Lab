@@ -4,6 +4,7 @@ import sys
 import re
 import time
 import shutil
+import json
 from datetime import datetime
 from pathlib import Path
 from selenium import webdriver
@@ -15,6 +16,28 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from urllib3.exceptions import ReadTimeoutError, ConnectionError as Urllib3ConnectionError
 import socket
+import html
+
+# Debug logging helper
+DEBUG_LOG_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), ".cursor", "debug.log")
+def debug_log(location, message, data=None, hypothesis_id=None):
+    try:
+        log_entry = {
+            "timestamp": int(time.time() * 1000),
+            "location": location,
+            "message": message,
+            "data": data or {},
+            "sessionId": "debug-session",
+            "runId": "run1",
+            "hypothesisId": hypothesis_id
+        }
+        os.makedirs(os.path.dirname(DEBUG_LOG_PATH), exist_ok=True)
+        with open(DEBUG_LOG_PATH, "a", encoding="utf-8") as f:
+            f.write(json.dumps(log_entry) + "\n")
+        # Also print for immediate visibility
+        print(f"[DEBUG] {location}: {message} - {json.dumps(data) if data else ''}")
+    except Exception as e:
+        print(f"[DEBUG LOG ERROR] {e}")
 
 # Path to Excel file (in parent folder)
 excel_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), "ScrappedProducts.xlsx")
@@ -396,11 +419,11 @@ def scrape_product_data(link, expected_unit, retry_count=0):
         
         # Check if unit matches
         if website_unit.upper() != str(expected_unit).upper().strip():
-            print(f"    Unit mismatch! Skipping...")
+            print(f"    ⚠️  Unit mismatch! Website: {website_unit}, Expected: {expected_unit}")
             return "Unit not matched", "Unit not matched", "Unit not matched", None
         
         # Unit matches, proceed with scraping
-        print(f"    Unit matched! Scraping data...")
+        print(f"    ✅ Unit matched! Scraping data...")
         
         # 1. Scrape Image URL - FIXED to only get actual product images
         image_url = None
@@ -417,10 +440,13 @@ def scrape_product_data(link, expected_unit, retry_count=0):
                 # Exclude non-image extensions
                 if any(url_lower.endswith(ext) for ext in non_image_extensions):
                     return False
+                # EXCLUDE tag/rebate images (these are not product images)
+                if '/tags/' in url_lower or 'tags/' in url_lower or 'tagoutlined' in url_lower:
+                    return False
                 # Prefer URLs with image extensions
                 if any(url_lower.endswith(ext) for ext in image_extensions):
                     return True
-                # If from known image domains, accept it
+                # If from known image domains, accept it (but not tags)
                 if any(domain in url_lower for domain in ['oppictures.com', 'content.oppictures.com']):
                     return True
                 # Exclude script and style sources
@@ -428,18 +454,51 @@ def scrape_product_data(link, expected_unit, retry_count=0):
                     return False
                 return False  # Default: be conservative, only accept if we're sure
             
+            # Helper function to check if URL is a product image (prioritize these)
+            def is_product_image_url(url):
+                """Check if URL is a product image (not a tag/rebate image)"""
+                if not url:
+                    return False
+                url_lower = url.lower()
+                # Exclude tag/rebate images
+                if '/tags/' in url_lower or 'tags/' in url_lower or 'tagoutlined' in url_lower:
+                    return False
+                # Prioritize actual product images from Master_Variants
+                if 'master_variants' in url_lower or 'variant_' in url_lower:
+                    return True
+                # Also accept other oppictures images that aren't tags
+                if 'oppictures.com' in url_lower and '/tags/' not in url_lower:
+                    return True
+                return False
+            
             # METHOD 1: Use DOM to find actual <img> tags (most reliable)
             try:
-                # First, look specifically for oppictures images (most reliable)
+                # First, look specifically for product images from Master_Variants (highest priority)
                 img_elements = driver.find_elements(By.XPATH, "//img[contains(@src, 'oppictures')]")
+                product_image_candidates = []
+                tag_image_candidates = []
+                
                 for img in img_elements:
                     src = img.get_attribute('src')
-                    if src and is_image_url(src):
+                    if src:
                         if src.startswith('//'):
                             src = 'https:' + src
-                        image_url = src
-                        print(f"    Found image from oppictures img tag: {image_url[:80]}...")
-                        break
+                        # Check if it's a product image (not a tag)
+                        if is_product_image_url(src):
+                            product_image_candidates.append(src)
+                        elif is_image_url(src):
+                            # It's an image but might be a tag - collect separately
+                            tag_image_candidates.append(src)
+                
+                # Prioritize product images from Master_Variants
+                if product_image_candidates:
+                    image_url = product_image_candidates[0]
+                    print(f"    Found product image from Master_Variants: {image_url[:80]}...")
+                elif tag_image_candidates:
+                    # Only use tag images if no product images found (shouldn't happen, but fallback)
+                    # Actually, skip tag images - they're not product images
+                    print(f"    Warning: Only tag images found, skipping...")
+                    image_url = None
                 
                 # If not found, look for main product image (usually the largest or first one)
                 if not image_url:
@@ -456,22 +515,26 @@ def scrape_product_data(link, expected_unit, retry_count=0):
                             img_elements = driver.find_elements(By.XPATH, selector)
                             for img in img_elements:
                                 src = img.get_attribute('src')
-                                if src and is_image_url(src):
+                                if src:
                                     if src.startswith('//'):
                                         src = 'https:' + src
-                                    # Skip small images (likely icons/logos)
-                                    try:
-                                        width = img.get_attribute('width')
-                                        height = img.get_attribute('height')
-                                        if width and height:
-                                            w, h = int(width), int(height)
-                                            if w < 50 or h < 50:  # Skip very small images
-                                                continue
-                                    except:
-                                        pass
-                                    image_url = src
-                                    print(f"    Found image from product img tag: {image_url[:80]}...")
-                                    break
+                                    # Skip tag images
+                                    if not is_product_image_url(src) and '/tags/' in src.lower():
+                                        continue
+                                    if is_image_url(src) and is_product_image_url(src):
+                                        # Skip small images (likely icons/logos)
+                                        try:
+                                            width = img.get_attribute('width')
+                                            height = img.get_attribute('height')
+                                            if width and height:
+                                                w, h = int(width), int(height)
+                                                if w < 50 or h < 50:  # Skip very small images
+                                                    continue
+                                        except:
+                                            pass
+                                        image_url = src
+                                        print(f"    Found image from product img tag: {image_url[:80]}...")
+                                        break
                             if image_url:
                                 break
                         except:
@@ -481,24 +544,46 @@ def scrape_product_data(link, expected_unit, retry_count=0):
             
             # METHOD 2: Fallback to page source regex (only for <img> tags)
             if not image_url:
-                # Look specifically for <img> tags with oppictures
+                # First, prioritize product images from Master_Variants
                 img_tag_pattern = r'<img[^>]+src=["\']([^"\']*oppictures[^"\']+)["\']'
                 matches = re.finditer(img_tag_pattern, page_source, re.IGNORECASE)
+                product_image_candidates = []
+                other_image_candidates = []
+                
                 for match in matches:
                     src = match.group(1)
-                    if is_image_url(src):
-                        if src.startswith('//'):
-                            src = 'https:' + src
-                        image_url = src
-                        print(f"    Found image from page source (oppictures): {image_url[:80]}...")
-                        break
+                    if src.startswith('//'):
+                        src = 'https:' + src
+                    # Skip tag images
+                    if '/tags/' in src.lower() or 'tags/' in src.lower() or 'tagoutlined' in src.lower():
+                        continue
+                    if is_product_image_url(src):
+                        product_image_candidates.append(src)
+                    elif is_image_url(src):
+                        other_image_candidates.append(src)
                 
-                # If still not found, look for any <img> tag with image extensions
+                # Use product images first
+                if product_image_candidates:
+                    image_url = product_image_candidates[0]
+                    print(f"    Found product image from page source (Master_Variants): {image_url[:80]}...")
+                elif other_image_candidates:
+                    # Filter out any tag images that might have slipped through
+                    filtered_candidates = [c for c in other_image_candidates if '/tags/' not in c.lower() and 'tagoutlined' not in c.lower()]
+                    if filtered_candidates:
+                        image_url = filtered_candidates[0]
+                        print(f"    Found image from page source (oppictures): {image_url[:80]}...")
+                    else:
+                        print(f"    Warning: Only tag images found in candidates, skipping...")
+                
+                # If still not found, look for any <img> tag with image extensions (but exclude tags)
                 if not image_url:
                     img_tag_pattern = r'<img[^>]+src=["\']([^"\']+)["\']'
                     matches = re.finditer(img_tag_pattern, page_source, re.IGNORECASE)
                     for match in matches:
                         src = match.group(1)
+                        # Skip tag images
+                        if '/tags/' in src.lower() or 'tags/' in src.lower() or 'tagoutlined' in src.lower():
+                            continue
                         if is_image_url(src):
                             # Skip common non-product images
                             if any(skip in src.lower() for skip in ['logo', 'icon', 'banner', 'header', 'footer', 'button', 'arrow']):
@@ -550,86 +635,196 @@ def scrape_product_data(link, expected_unit, retry_count=0):
             print(f"    Error finding product name: {e}")
         
         # 3. Scrape Description
-        # Learned pattern: Description is in a <div> element
-        # Must exclude: "Non-Stock Item - Extended Delivery Time" and similar stock/status messages
+        # Extract only the actual product description, excluding warnings, recommendations, pricing, and UI elements
+        # Based on screenshot: Description is located under "Description :" heading, ABOVE the Product Details table
         description = None
-        exclude_patterns = [
-            'non-stock item',
-            'extended delivery time',
-            'stock item',
-            'delivery time',
-            'description:',  # Just the label
-            'in stock',
-            'out of stock',
-        ]
+        
+        def clean_description_text(text):
+            """Clean description text by removing HTML fragments, section markers, and unwanted content"""
+            if not text:
+                return None
+            
+            # Remove any remaining HTML tags and fragments (like "<fa", "<tr", etc.)
+            text = re.sub(r'<[^>]*$', '', text)  # Remove incomplete HTML tags at the end
+            text = re.sub(r'<[^>]+>', ' ', text)  # Remove complete HTML tags
+            text = re.sub(r'&[a-zA-Z]+;', ' ', text)  # Remove HTML entities that weren't decoded
+            
+            # Remove section markers and UI elements at the end
+            end_markers = [
+                r'Product Details\*+\s*',
+                r'Global Product Type\s*',
+                r'ADD TO LIST\s*',
+                r'People Who Bought\s*',
+                r'Also Consider\s*',
+                r'List price\s*',
+                r'Choose other options\s*',
+                r'Select a Product\s*',
+            ]
+            for marker in end_markers:
+                text = re.sub(marker + r'.*$', '', text, flags=re.IGNORECASE)
+            
+            # Remove section markers and UI elements at the start
+            start_markers = [
+                r'^Product Details\*+\s*',
+                r'^Global Product Type\s*',
+                r'^Description\s*:?\s*',
+            ]
+            for marker in start_markers:
+                text = re.sub(marker, '', text, flags=re.IGNORECASE)
+            
+            # Remove any HTML-like fragments (incomplete tags, attributes, etc.)
+            text = re.sub(r'<[^>]*', '', text)  # Remove any remaining HTML fragments
+            text = re.sub(r'[<>]', '', text)  # Remove any stray angle brackets
+            
+            # Remove item numbers at the start
+            text = re.sub(r'^[A-Z0-9]{6,15}\s+', '', text)
+            
+            # Normalize whitespace
+            text = ' '.join(text.split())
+            text = text.strip()
+            
+            # Remove trailing punctuation that might be from HTML (like "**", "***", etc.)
+            text = re.sub(r'\*+\s*$', '', text)
+            text = text.strip()
+            
+            return text if text else None
         
         try:
-            # METHOD 1: Find div containing actual description text (learned from inspection)
-            # The description appears in a div element, but we need to skip stock messages
-            try:
-                # Look for divs with substantial text content that looks like a product description
-                all_divs = driver.find_elements(By.TAG_NAME, "div")
-                for div in all_divs:
-                    text = div.text.strip()
-                    # Look for description-like content (substantial text, reasonable length)
-                    if text and 30 < len(text) < 500:  # Reasonable description length
-                        text_lower = text.lower()
-                        # Exclude stock messages, navigation, labels
-                        if any(exclude in text_lower for exclude in exclude_patterns):
-                            continue
-                        if any(skip in text_lower for skip in ['menu', 'nav', 'header', 'footer', 'cookie', 'terms', 'privacy']):
-                            continue
-                        
-                        # Check if it contains common description words (actual product description)
-                        if any(word in text_lower for word in ['for', 'with', 'set', 'includes', 'features', 'replacement', 'key', 'lock']):
-                            description = text
-                            print(f"    Found description from div: {description[:80]}...")
-                            break
-            except Exception as e:
-                print(f"    Error in div search: {e}")
+            # Find "Description :" or "Description:" heading and extract text after it
+            desc_heading_patterns = [
+                'Description :',
+                'Description:',
+                'Description',
+            ]
             
-            # METHOD 2: Try elements with description class/id (but filter out stock messages)
-            if not description:
-                desc_selectors = [
-                    "//div[contains(@class, 'description')]",
-                    "//div[contains(@id, 'description')]",
+            desc_index = -1
+            found_pattern = None
+            for pattern in desc_heading_patterns:
+                desc_index = page_source.find(pattern)
+                if desc_index != -1:
+                    found_pattern = pattern
+                    break
+            
+            if desc_index != -1:
+                # Get text chunk after the description heading (10000 chars to handle long descriptions with HTML)
+                text_chunk = page_source[desc_index:desc_index + 10000]
+                
+                # Remove HTML tags and decode HTML entities
+                text_only = re.sub(r'<[^>]+>', ' ', text_chunk)
+                text_only = html.unescape(text_only)
+                text_only = ' '.join(text_only.split())
+                
+                # Remove the "Description :" or "Description:" prefix
+                text_only = re.sub(r'^description\s*:?\s*', '', text_only, flags=re.IGNORECASE)
+                text_only = text_only.strip()
+                
+                # The description ends when we hit "Product Details" or other section headers
+                # Only truncate if the marker appears near the END (last 20% of text) to avoid cutting mid-description
+                stop_markers = [
+                    'Product Details',
+                    'Product Details**',
+                    'Product Details***',
+                    'Global Product Type',
+                    'ADD TO LIST',
+                    'People Who Bought',
+                    'Also Consider',
+                    'List price',
                 ]
-                for selector in desc_selectors:
+                
+                # Find stop markers, but only truncate if they appear in the last portion of text (likely section boundary)
+                text_length = len(text_only)
+                for marker in stop_markers:
+                    marker_pos = text_only.find(marker)
+                    if marker_pos != -1:
+                        # Only truncate if marker is in the last 30% of text (likely a section boundary, not mid-description)
+                        if marker_pos > text_length * 0.7:
+                            text_only = text_only[:marker_pos].strip()
+                            break
+                
+                # Clean up: remove item numbers at the start
+                text_only = re.sub(r'^[A-Z0-9]{6,15}\s+', '', text_only)
+                
+                # Filter out unwanted patterns
+                text_lower = text_only.lower()
+                excluded_patterns = [
+                    'add to list',
+                    'people who bought',
+                    'also bought',
+                    'choose other options',
+                    'select a product',
+                    'list price',
+                    'non-stock item',
+                    'extended delivery time',
+                    'warning:',
+                    'p65',
+                ]
+                
+                # Check if text contains excluded patterns - if so, truncate before them
+                for exclude in excluded_patterns:
+                    exclude_pos = text_lower.find(exclude)
+                    if exclude_pos != -1:
+                        text_only = text_only[:exclude_pos].strip()
+                        break
+                
+                # Remove price patterns
+                text_only = re.sub(r'\$\d+[.,]\d+\s*/[A-Z]{2,4}', '', text_only, flags=re.IGNORECASE)
+                
+                # Clean the description text (remove HTML fragments, section markers, etc.)
+                text_only = clean_description_text(text_only)
+                
+                # Final validation: must be reasonable length (20-10000 chars) and not empty
+                if text_only and 20 <= len(text_only) <= 10000:
+                    description = text_only
+        except Exception as e:
+            pass  # Silently continue to DOM fallback
+        
+        # If page source method didn't work, try DOM-based method
+        if not description:
+            try:
+                desc_heading_xpaths = [
+                    "//*[contains(text(), 'Description :')]",
+                    "//*[contains(text(), 'Description:')]",
+                    "//*[contains(., 'Description') and (contains(., ':') or contains(., ' :'))]",
+                ]
+                
+                for xpath in desc_heading_xpaths:
                     try:
-                        desc_elements = driver.find_elements(By.XPATH, selector)
-                        for elem in desc_elements:
+                        elements = driver.find_elements(By.XPATH, xpath)
+                        for elem in elements:
                             text = elem.text.strip()
-                            if text and len(text) > 30:
-                                text_lower = text.lower()
-                                # Skip if it's a stock message or label
-                                if not any(exclude in text_lower for exclude in exclude_patterns):
-                                    description = text
-                                    print(f"    Found description from class/id: {description[:80]}...")
-                                    break
+                            if 'description' in text.lower() and ':' in text:
+                                # Try to get parent and find text after "Description :"
+                                try:
+                                    parent = elem.find_element(By.XPATH, "./..")
+                                    parent_text = parent.text.strip()
+                                    desc_match = re.search(r'description\s*:?\s*(.+?)(?:\n|$|Product Details|ADD TO LIST|People Who)', parent_text, re.IGNORECASE | re.DOTALL)
+                                    if desc_match:
+                                        desc_text = desc_match.group(1).strip()
+                                        desc_text = clean_description_text(desc_text)
+                                        if desc_text and 20 <= len(desc_text) <= 10000:
+                                            description = desc_text
+                                            break
+                                except:
+                                    pass
+                                
+                                # Alternative: get following sibling
+                                try:
+                                    next_sibling = elem.find_element(By.XPATH, "./following-sibling::*[1]")
+                                    desc_text = next_sibling.text.strip()
+                                    desc_text = clean_description_text(desc_text)
+                                    if desc_text and 20 <= len(desc_text) <= 10000:
+                                        desc_lower = desc_text.lower()
+                                        if not any(exclude in desc_lower for exclude in ['add to list', 'people who bought', 'list price']):
+                                            description = desc_text
+                                            break
+                                except:
+                                    pass
                         if description:
                             break
                     except:
                         continue
-            
-            # METHOD 3: Fallback to page source pattern (filtered)
-            if not description:
-                desc_pattern = r'<[^>]*class="[^"]*description[^"]*"[^>]*>([^<]+(?:<[^>]+>[^<]+)*)</[^>]*>'
-                matches = list(re.finditer(desc_pattern, page_source, re.IGNORECASE | re.DOTALL))
-                for match in matches:
-                    desc_text = match.group(1)
-                    desc_text = re.sub(r'<[^>]+>', ' ', desc_text)
-                    desc_text = ' '.join(desc_text.split())
-                    if desc_text and len(desc_text) > 20:
-                        desc_lower = desc_text.lower()
-                        # Skip if it's a stock message
-                        if not any(exclude in desc_lower for exclude in exclude_patterns):
-                            description = desc_text
-                            print(f"    Found description from page source: {description[:80]}...")
-                            break
-                    
-        except Exception as e:
-            print(f"    Error finding description: {e}")
-        
+            except Exception:
+                pass
         return product_name, description, image_url, website_unit
         
     except TimeoutException:
@@ -761,51 +956,109 @@ def process_products(start_idx=0, end_idx=None, test_mode=False):
                 print(f"ERROR: Failed to create emergency backup: {backup_error}")
                 return False
     
+    # Find Item Number column for display
+    item_number_col = None
+    for col in df.columns:
+        col_lower = col.lower()
+        if col_lower == 'item number':
+            item_number_col = col
+            break
+        elif 'item' in col_lower and 'number' in col_lower:
+            if 'stock' not in col_lower and 'butted' not in col_lower:
+                item_number_col = col
+                break
+    
     try:
         for idx in range(start_idx, end_idx + 1):
             row = df.iloc[idx]
-            print(f"Row {idx + 1}/{len(df)} (Processing {processed_count + 1}/{total_to_process}):")
+            
+            # Get item number for display
+            item_number = str(row[item_number_col]).strip() if item_number_col and pd.notna(row[item_number_col]) else f"Row {idx + 1}"
+            
+            print(f"\n{'='*70}")
+            print(f"📦 Product: {item_number} | Row {idx + 1}/{len(df)} | Progress: {processed_count + 1}/{total_to_process}")
+            print(f"{'='*70}")
             
             # Get link
             link = row[link_col]
             if pd.isna(link) or str(link).strip() == '':
-                print("  No link found, skipping...")
+                print("  ❌ No link found, skipping...")
                 skipped_count += 1
                 continue
             
             # Get expected unit
             expected_unit = row[unit_col]
             if pd.isna(expected_unit):
-                print("  No unit of measure found, skipping...")
+                print("  ❌ No unit of measure found, skipping...")
                 skipped_count += 1
                 continue
             
-            # Check if already scraped (skip if Product Name is already filled)
-            if pd.notna(row[product_name_col]) and str(row[product_name_col]).strip() != '':
-                product_name_value = str(row[product_name_col]).strip()
-                # Skip if already has a real product name (not error messages)
-                # Note: "Timeout error" is NOT in this list, so timeout errors will be retried
-                if product_name_value not in ['Unit not matched', 'Product not found']:
-                    print("  Already scraped, skipping...")
-                    skipped_count += 1
-                    continue
-                # Skip if already marked as "Product not found" (to avoid re-checking unavailable products)
-                elif product_name_value == 'Product not found':
-                    print("  Already marked as 'Product not found', skipping...")
-                    skipped_count += 1
-                    continue
-                # Skip if already marked as "Unit not matched" (to avoid re-checking products with wrong units)
-                elif product_name_value == 'Unit not matched':
-                    print("  Already marked as 'Unit not matched', skipping...")
-                    skipped_count += 1
-                    continue
-                # Allow "Timeout error" products to be retried (timeouts might be temporary)
-                # elif product_name_value == 'Timeout error':
-                #     print("  Already marked as 'Timeout error', skipping...")
-                #     skipped_count += 1
-                #     continue
+            # Check current status of the three columns
+            current_product_name = str(row[product_name_col]).strip() if pd.notna(row[product_name_col]) else ''
+            current_description = str(row[description_col]).strip() if pd.notna(row[description_col]) else ''
+            current_image_url = str(row[image_url_col]).strip() if pd.notna(row[image_url_col]) else ''
+            
+            # Helper function to get status emoji
+            def get_status_emoji(value, error_messages):
+                if not value or value == '':
+                    return '⚪', 'Empty'
+                elif value in error_messages:
+                    if value == 'Product not found':
+                        return '❌', 'Product not found'
+                    elif value == 'Unit not matched':
+                        return '⚠️', 'Unit not matched'
+                    elif value == 'Timeout error':
+                        return '⏱️', 'Timeout error'
+                    else:
+                        return '⚠️', value
+                else:
+                    return '✅', 'Found'
+            
+            error_messages = ['Unit not matched', 'Product not found', 'Timeout error', '']
+            
+            # Display current status
+            pn_emoji, pn_status = get_status_emoji(current_product_name, error_messages)
+            desc_emoji, desc_status = get_status_emoji(current_description, error_messages)
+            img_emoji, img_status = get_status_emoji(current_image_url, error_messages)
+            
+            print(f"\n📊 Current Status:")
+            print(f"   {pn_emoji} Product Name: {pn_status}")
+            print(f"   {desc_emoji} Description: {desc_status}")
+            print(f"   {img_emoji} Image URL: {img_status}")
+            
+            # Skip if any column has "Product not found" (product wasn't found on website)
+            if (current_product_name == 'Product not found' or 
+                current_description == 'Product not found' or 
+                current_image_url == 'Product not found'):
+                print(f"\n  ⏭️  Already marked as 'Product not found', skipping...")
+                skipped_count += 1
+                continue
+            
+            # Count how many columns have valid data (not empty, not error messages)
+            filled_count = 0
+            if current_product_name and current_product_name not in error_messages:
+                filled_count += 1
+            if current_description and current_description not in error_messages:
+                filled_count += 1
+            if current_image_url and current_image_url not in error_messages:
+                filled_count += 1
+            
+            # Skip if all 3 columns are already filled
+            if filled_count == 3:
+                print(f"\n  ✅ All columns already filled, skipping...")
+                skipped_count += 1
+                continue
+            
+            # If 1 or 2 columns are filled, we'll re-scrape to fill the empty ones
+            if filled_count > 0:
+                print(f"\n  🔄 Partial data found ({filled_count}/3 columns filled), re-scraping to fill empty columns...")
+            else:
+                print(f"\n  🆕 New product, scraping all columns...")
             
             # Scrape data (with retry on session loss, but not for timeout errors)
+            print(f"\n  🌐 Accessing: {link}")
+            print(f"  🔍 Expected Unit: {expected_unit}")
+            
             max_retries = 1  # Reduced retries to avoid getting stuck
             retry_count = 0
             product_name, description, image_url, website_unit = None, None, None, None
@@ -820,33 +1073,102 @@ def process_products(start_idx=0, end_idx=None, test_mode=False):
                 # If we got None, None, None, None and it might be a session issue, retry once
                 retry_count += 1
                 if retry_count <= max_retries:
-                    print(f"    Retrying ({retry_count}/{max_retries})...")
+                    print(f"    🔄 Retrying ({retry_count}/{max_retries})...")
                     time.sleep(2)  # Longer pause before retry to let connections reset
             
-            # Update Excel row
+            # Display scraping results
+            print(f"\n📥 Scraping Results:")
+            
+            # Update Excel row - only fill empty columns, don't overwrite existing data
             if product_name == "Unit not matched":
-                df.at[idx, product_name_col] = "Unit not matched"
-                df.at[idx, description_col] = "Unit not matched"
-                df.at[idx, image_url_col] = "Unit not matched"
+                print(f"   ⚠️  Unit not matched! Website unit doesn't match expected unit.")
+                # Only update if column is empty or has error message
+                updated_pn = not current_product_name or current_product_name in ['Unit not matched', 'Timeout error', '']
+                updated_desc = not current_description or current_description in ['Unit not matched', 'Timeout error', '']
+                updated_img = not current_image_url or current_image_url in ['Unit not matched', 'Timeout error', '']
+                
+                if updated_pn:
+                    df.at[idx, product_name_col] = "Unit not matched"
+                if updated_desc:
+                    df.at[idx, description_col] = "Unit not matched"
+                if updated_img:
+                    df.at[idx, image_url_col] = "Unit not matched"
+                
+                print(f"   📝 Updated: Product Name: {'✅' if updated_pn else '⏭️'}, Description: {'✅' if updated_desc else '⏭️'}, Image URL: {'✅' if updated_img else '⏭️'}")
                 processed_count += 1
             elif product_name == "Product not found":
-                df.at[idx, product_name_col] = "Product not found"
-                df.at[idx, description_col] = "Product not found"
-                df.at[idx, image_url_col] = "Product not found"
+                print(f"   ❌ Product not found on website!")
+                # Only update if column is empty or has error message
+                updated_pn = not current_product_name or current_product_name in ['Product not found', 'Timeout error', '']
+                updated_desc = not current_description or current_description in ['Product not found', 'Timeout error', '']
+                updated_img = not current_image_url or current_image_url in ['Product not found', 'Timeout error', '']
+                
+                if updated_pn:
+                    df.at[idx, product_name_col] = "Product not found"
+                if updated_desc:
+                    df.at[idx, description_col] = "Product not found"
+                if updated_img:
+                    df.at[idx, image_url_col] = "Product not found"
+                
+                print(f"   📝 Updated: Product Name: {'✅' if updated_pn else '⏭️'}, Description: {'✅' if updated_desc else '⏭️'}, Image URL: {'✅' if updated_img else '⏭️'}")
                 processed_count += 1
             elif product_name == "Timeout error":
-                df.at[idx, product_name_col] = "Timeout error"
-                df.at[idx, description_col] = "Timeout error"
-                df.at[idx, image_url_col] = "Timeout error"
+                print(f"   ⏱️  Timeout error occurred!")
+                # Only update if column is empty (don't overwrite valid data with timeout error)
+                updated_pn = not current_product_name or current_product_name in ['Timeout error', '']
+                updated_desc = not current_description or current_description in ['Timeout error', '']
+                updated_img = not current_image_url or current_image_url in ['Timeout error', '']
+                
+                if updated_pn:
+                    df.at[idx, product_name_col] = "Timeout error"
+                if updated_desc:
+                    df.at[idx, description_col] = "Timeout error"
+                if updated_img:
+                    df.at[idx, image_url_col] = "Timeout error"
+                
+                print(f"   📝 Updated: Product Name: {'✅' if updated_pn else '⏭️'}, Description: {'✅' if updated_desc else '⏭️'}, Image URL: {'✅' if updated_img else '⏭️'}")
                 processed_count += 1
             elif product_name:
-                df.at[idx, product_name_col] = product_name
+                # Display what was found
+                pn_found = '✅' if product_name else '❌'
+                desc_found = '✅' if description else '❌'
+                img_found = '✅' if image_url else '❌'
+                
+                print(f"   {pn_found} Product Name: {'Found' if product_name else 'Not found'}")
+                if product_name:
+                    print(f"      └─ {product_name[:60]}{'...' if len(product_name) > 60 else ''}")
+                
+                print(f"   {desc_found} Description: {'Found' if description else 'Not found'}")
                 if description:
-                    df.at[idx, description_col] = description
+                    print(f"      └─ {description[:60]}{'...' if len(description) > 60 else ''} ({len(description)} chars)")
+                
+                print(f"   {img_found} Image URL: {'Found' if image_url else 'Not found'}")
                 if image_url:
+                    print(f"      └─ {image_url[:60]}{'...' if len(image_url) > 60 else ''}")
+                
+                # Only fill empty columns, preserve existing valid data
+                updated_pn = not current_product_name or current_product_name in ['Unit not matched', 'Timeout error', '']
+                updated_desc = description and (not current_description or current_description in ['Unit not matched', 'Timeout error', ''])
+                updated_img = image_url and (not current_image_url or current_image_url in ['Unit not matched', 'Timeout error', ''])
+                
+                # Update Product Name if empty or has error message
+                if updated_pn:
+                    df.at[idx, product_name_col] = product_name
+                # Update Description if empty or has error message
+                if updated_desc:
+                    df.at[idx, description_col] = description
+                # Update Image URL if empty or has error message
+                if updated_img:
                     df.at[idx, image_url_col] = image_url
+                
+                print(f"\n   📝 Excel Update:")
+                print(f"      Product Name: {'✅ Updated' if updated_pn else '⏭️  Preserved (already has data)'}")
+                print(f"      Description: {'✅ Updated' if updated_desc else '⏭️  Preserved (already has data)' if current_description and current_description not in error_messages else '❌ Not found'}")
+                print(f"      Image URL: {'✅ Updated' if updated_img else '⏭️  Preserved (already has data)' if current_image_url and current_image_url not in error_messages else '❌ Not found'}")
+                
                 processed_count += 1
             else:
+                print(f"   ❌ Error: No data returned from scraper")
                 error_count += 1
             
             # Save progress (every 10 products)
