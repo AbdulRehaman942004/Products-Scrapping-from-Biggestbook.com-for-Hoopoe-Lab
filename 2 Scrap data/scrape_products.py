@@ -229,11 +229,11 @@ def setup_driver():
         chrome_options.add_experimental_option("prefs", prefs)
         
         driver = webdriver.Chrome(options=chrome_options)
-        driver.implicitly_wait(3)  # Reduced from 10 to 3 seconds for faster failure detection
-        # Set page load timeout to prevent hanging (30 seconds max)
-        driver.set_page_load_timeout(30)
+        driver.implicitly_wait(1)  # Reduced to 1 second for faster failure detection
+        # Set page load timeout to prevent hanging (15 seconds max - optimized for speed)
+        driver.set_page_load_timeout(15)
         # Set script timeout to prevent JS from hanging
-        driver.set_script_timeout(30)
+        driver.set_script_timeout(15)
     return driver
 
 def recreate_driver():
@@ -250,7 +250,7 @@ def recreate_driver():
     
     driver = None
     print("\nRecreating Chrome driver (session was lost)...")
-    time.sleep(2)  # Brief pause before recreating to let connections close
+    time.sleep(1)  # Brief pause before recreating (reduced from 2s)
     return setup_driver()
 
 def extract_unit_from_price(price_text):
@@ -289,10 +289,10 @@ def scrape_product_data(link, expected_unit, retry_count=0):
         print(f"  Accessing: {link}")
         # Use set_page_load_timeout to prevent hanging (already set in setup_driver, but ensure it's active)
         try:
-            driver.set_page_load_timeout(30)  # 30 second timeout for page load
+            driver.set_page_load_timeout(15)  # 15 second timeout for page load (optimized)
             driver.get(link)
         except TimeoutException:
-            print(f"    Page load timeout (30s) - stopping page load and skipping")
+            print(f"    Page load timeout (15s) - stopping page load and skipping")
             try:
                 # Stop the page from loading to prevent browser from getting stuck
                 driver.execute_script("window.stop();")
@@ -303,19 +303,22 @@ def scrape_product_data(link, expected_unit, retry_count=0):
                 driver.get("about:blank")
             except:
                 pass  # Ignore if navigation fails
-            time.sleep(0.5)  # Brief pause to let browser recover
+            time.sleep(0.2)  # Brief pause to let browser recover (reduced from 0.5s)
             return "Timeout error", "Timeout error", "Timeout error", None
         
-        # ULTRA-FAST DETECTION: Minimal wait, then immediately check for product
+        # ULTRA-FAST DETECTION: Use JavaScript to check for body (faster than WebDriverWait)
         try:
-            # Wait only for body (very fast)
-            WebDriverWait(driver, 2).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
+            # Use JavaScript check for faster detection
+            body_exists = driver.execute_script("return document.body !== null;")
+            if not body_exists:
+                # Fallback to WebDriverWait with shorter timeout
+                WebDriverWait(driver, 1).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
         except:
             print(f"    Product not found (page load timeout)")
             return "Product not found", "Product not found", "Product not found", None
         
         # IMMEDIATE CHECK: Look for key product elements (fastest way to detect if product exists)
-        # If we can't find the unit element quickly, product likely doesn't exist
+        # Cache page_source to avoid multiple fetches
         page_source = driver.page_source
         page_source_lower = page_source.lower()
         
@@ -329,36 +332,47 @@ def scrape_product_data(link, expected_unit, retry_count=0):
                 print(f"    Product not found (detected: '{indicator}')")
                 return "Product not found", "Product not found", "Product not found", None
         
-        # Try to find the unit element with a very short timeout (1 second)
+        # Try to find the unit element with a very short timeout (0.5 second - optimized)
         # This is the fastest way to confirm product exists
         try:
-            uom_element = WebDriverWait(driver, 1).until(
+            uom_element = WebDriverWait(driver, 0.5).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, "span.ess-detail-uom, .ess-detail-uom"))
             )
             # If we found it, product exists - continue to extraction
         except:
             # Unit element not found - do quick checks to confirm product doesn't exist
-            # Check for key product elements - if none found, product doesn't exist
-            product_indicators = [
-                'ess-detail', 'ess-product', 'product-detail', 'item-detail',
-                'product-name', 'product-type', 'global product type'
-            ]
-            has_product_indicator = any(indicator in page_source_lower for indicator in product_indicators)
-            
-            # Also check if there's a price with unit pattern (real products have this)
-            has_price_with_unit = bool(re.search(r'\$[\d,]+\.?\d*\s*/([A-Z]{2,4})\b', page_source, re.IGNORECASE))
-            
-            if not has_product_indicator and not has_price_with_unit:
-                print(f"    Product not found (no product elements detected)")
-                return "Product not found", "Product not found", "Product not found", None
-            
-            # If we have indicators but no unit element, might be loading - try one more quick check (no wait)
+            # Use JavaScript for faster checking (no need to wait for full page load)
             try:
-                uom_element = driver.find_element(By.CSS_SELECTOR, "span.ess-detail-uom, .ess-detail-uom")
+                # Fast JavaScript check for unit element
+                uom_exists = driver.execute_script(
+                    "return document.querySelector('span.ess-detail-uom, .ess-detail-uom') !== null;"
+                )
+                if uom_exists:
+                    uom_element = driver.find_element(By.CSS_SELECTOR, "span.ess-detail-uom, .ess-detail-uom")
+                else:
+                    raise NoSuchElementException("Unit element not found")
             except:
-                # Still can't find unit element - likely product not available
-                print(f"    Product not found (unit element not found)")
-                return "Product not found", "Product not found", "Product not found", None
+                # Check for key product elements - if none found, product doesn't exist
+                product_indicators = [
+                    'ess-detail', 'ess-product', 'product-detail', 'item-detail',
+                    'product-name', 'product-type', 'global product type'
+                ]
+                has_product_indicator = any(indicator in page_source_lower for indicator in product_indicators)
+                
+                # Also check if there's a price with unit pattern (real products have this)
+                has_price_with_unit = bool(re.search(r'\$[\d,]+\.?\d*\s*/([A-Z]{2,4})\b', page_source, re.IGNORECASE))
+                
+                if not has_product_indicator and not has_price_with_unit:
+                    print(f"    Product not found (no product elements detected)")
+                    return "Product not found", "Product not found", "Product not found", None
+                
+                # If we have indicators but no unit element, might be loading - try one more quick check (no wait)
+                try:
+                    uom_element = driver.find_element(By.CSS_SELECTOR, "span.ess-detail-uom, .ess-detail-uom")
+                except:
+                    # Still can't find unit element - likely product not available
+                    print(f"    Product not found (unit element not found)")
+                    return "Product not found", "Product not found", "Product not found", None
         
         # Extract unit - we already found the element in the check above, so use it
         website_unit = None
@@ -367,6 +381,9 @@ def scrape_product_data(link, expected_unit, retry_count=0):
         common_units = ['EA', 'BX', 'CS', 'PK', 'CT', 'DZ', 'PR', 'RL', 'FT', 'YD', 'LB', 'OZ', 'GA', 'QT', 'PT', 'FL', 'PC', 'SET', 'PAIR', 'PKG', 'CASE', 'PACK', 'ROLL', 'TUBE', 'BAG', 'BOX', 'CARTON', 'PKT', 'BTL', 'CAN', 'JAR', 'TIN']
         # Common file extensions to exclude
         file_extensions = ['SVG', 'PNG', 'JPG', 'JPEG', 'GIF', 'PDF', 'XML', 'HTML', 'CSS', 'JS', 'JSON']
+        
+        # Pre-compile regex pattern for faster matching
+        uom_pattern = re.compile(r'class="ess-detail-uom"[^>]*>/([A-Z]{2,4})\b', re.IGNORECASE)
         
         try:
             # We already found the unit element in the check above, extract from it
@@ -381,25 +398,23 @@ def scrape_product_data(link, expected_unit, retry_count=0):
                 if website_unit and len(website_unit) >= 2 and len(website_unit) <= 4:
                     print(f"    Found unit: {website_unit}")
             except:
-                # Fallback: Try XPath
+                # Fallback: Try CSS selector with class contains (faster than XPath)
                 try:
-                    uom_elements = driver.find_elements(By.XPATH, "//*[contains(@class, 'ess-detail-uom') or contains(@class, 'ess-product-uom')]")
+                    uom_elements = driver.find_elements(By.CSS_SELECTOR, "[class*='ess-detail-uom'], [class*='ess-product-uom']")
                     for elem in uom_elements:
                         text = elem.text.strip()
                         if text.startswith('/'):
                             unit = text[1:].strip().upper()
                             if unit and len(unit) >= 2 and len(unit) <= 4:
                                 website_unit = unit
-                                print(f"    Found unit (XPath): {website_unit}")
+                                print(f"    Found unit (CSS): {website_unit}")
                                 break
                 except:
                     pass
             
-            # If still not found, try page source regex (quick check)
+            # If still not found, try page source regex (quick check using cached page_source)
             if not website_unit:
-                page_source = driver.page_source
-                uom_pattern = r'class="ess-detail-uom"[^>]*>/([A-Z]{2,4})\b'
-                match = re.search(uom_pattern, page_source, re.IGNORECASE)
+                match = uom_pattern.search(page_source)
                 if match:
                     potential_unit = match.group(1).upper()
                     if potential_unit in common_units or (len(potential_unit) >= 2 and len(potential_unit) <= 4 and potential_unit not in file_extensions):
@@ -425,34 +440,12 @@ def scrape_product_data(link, expected_unit, retry_count=0):
         # Unit matches, proceed with scraping
         print(f"    ✅ Unit matched! Scraping data...")
         
-        # 1. Scrape Image URL - FIXED to only get actual product images
+        # 1. Scrape Image URL - OPTIMIZED for speed
         image_url = None
         try:
-            # Define image file extensions and non-image extensions to exclude
-            image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg']
-            non_image_extensions = ['.js', '.css', '.html', '.xml', '.json', '.pdf', '.txt', '.ico']
-            
-            # Helper function to check if URL is an image
-            def is_image_url(url):
-                if not url:
-                    return False
-                url_lower = url.lower()
-                # Exclude non-image extensions
-                if any(url_lower.endswith(ext) for ext in non_image_extensions):
-                    return False
-                # EXCLUDE tag/rebate images (these are not product images)
-                if '/tags/' in url_lower or 'tags/' in url_lower or 'tagoutlined' in url_lower:
-                    return False
-                # Prefer URLs with image extensions
-                if any(url_lower.endswith(ext) for ext in image_extensions):
-                    return True
-                # If from known image domains, accept it (but not tags)
-                if any(domain in url_lower for domain in ['oppictures.com', 'content.oppictures.com']):
-                    return True
-                # Exclude script and style sources
-                if any(exclude in url_lower for exclude in ['bazaarvoice', 'script', 'style', 'analytics', 'tracking']):
-                    return False
-                return False  # Default: be conservative, only accept if we're sure
+            # Pre-compile regex patterns for faster matching
+            img_tag_pattern_oppictures = re.compile(r'<img[^>]+src=["\']([^"\']*oppictures[^"\']+)["\']', re.IGNORECASE)
+            img_tag_pattern_general = re.compile(r'<img[^>]+src=["\']([^"\']+)["\']', re.IGNORECASE)
             
             # Helper function to check if URL is a product image (prioritize these)
             def is_product_image_url(url):
@@ -471,82 +464,50 @@ def scrape_product_data(link, expected_unit, retry_count=0):
                     return True
                 return False
             
-            # METHOD 1: Use DOM to find actual <img> tags (most reliable)
+            # METHOD 1: Use JavaScript to quickly find product images (faster than Selenium)
             try:
-                # First, look specifically for product images from Master_Variants (highest priority)
-                img_elements = driver.find_elements(By.XPATH, "//img[contains(@src, 'oppictures')]")
-                product_image_candidates = []
-                tag_image_candidates = []
+                # Use JavaScript to find images with oppictures in src (much faster)
+                img_srcs = driver.execute_script("""
+                    var imgs = document.querySelectorAll('img[src*="oppictures"]');
+                    var srcs = [];
+                    for (var i = 0; i < imgs.length; i++) {
+                        var src = imgs[i].src;
+                        if (src && src.indexOf('/tags/') === -1 && src.indexOf('tagoutlined') === -1) {
+                            if (src.indexOf('master_variants') !== -1 || src.indexOf('variant_') !== -1) {
+                                srcs.unshift(src); // Prioritize product images
+                            } else {
+                                srcs.push(src);
+                            }
+                        }
+                    }
+                    return srcs;
+                """)
                 
-                for img in img_elements:
-                    src = img.get_attribute('src')
-                    if src:
-                        if src.startswith('//'):
-                            src = 'https:' + src
-                        # Check if it's a product image (not a tag)
-                        if is_product_image_url(src):
-                            product_image_candidates.append(src)
-                        elif is_image_url(src):
-                            # It's an image but might be a tag - collect separately
-                            tag_image_candidates.append(src)
-                
-                # Prioritize product images from Master_Variants
-                if product_image_candidates:
-                    image_url = product_image_candidates[0]
-                    print(f"    Found product image from Master_Variants: {image_url[:80]}...")
-                elif tag_image_candidates:
-                    # Only use tag images if no product images found (shouldn't happen, but fallback)
-                    # Actually, skip tag images - they're not product images
-                    print(f"    Warning: Only tag images found, skipping...")
-                    image_url = None
-                
-                # If not found, look for main product image (usually the largest or first one)
-                if not image_url:
-                    # Look for images in product detail sections
-                    product_img_selectors = [
-                        "//img[contains(@class, 'product') or contains(@class, 'item')]",
-                        "//img[contains(@id, 'product') or contains(@id, 'item')]",
-                        "//div[contains(@class, 'product')]//img",
-                        "//div[contains(@class, 'detail')]//img",
-                    ]
-                    
-                    for selector in product_img_selectors:
-                        try:
-                            img_elements = driver.find_elements(By.XPATH, selector)
-                            for img in img_elements:
-                                src = img.get_attribute('src')
-                                if src:
-                                    if src.startswith('//'):
-                                        src = 'https:' + src
-                                    # Skip tag images
-                                    if not is_product_image_url(src) and '/tags/' in src.lower():
-                                        continue
-                                    if is_image_url(src) and is_product_image_url(src):
-                                        # Skip small images (likely icons/logos)
-                                        try:
-                                            width = img.get_attribute('width')
-                                            height = img.get_attribute('height')
-                                            if width and height:
-                                                w, h = int(width), int(height)
-                                                if w < 50 or h < 50:  # Skip very small images
-                                                    continue
-                                        except:
-                                            pass
-                                        image_url = src
-                                        print(f"    Found image from product img tag: {image_url[:80]}...")
-                                        break
-                            if image_url:
-                                break
-                        except:
-                            continue
+                if img_srcs and len(img_srcs) > 0:
+                    image_url = img_srcs[0]
+                    print(f"    Found product image (JS): {image_url[:80]}...")
             except Exception as e:
-                print(f"    Error in DOM image search: {e}")
+                pass  # Fallback to other methods
             
-            # METHOD 2: Fallback to page source regex (only for <img> tags)
+            # METHOD 2: Fallback to CSS selector (faster than XPath)
+            if not image_url:
+                try:
+                    img_elements = driver.find_elements(By.CSS_SELECTOR, "img[src*='oppictures']")
+                    for img in img_elements:
+                        src = img.get_attribute('src')
+                        if src and is_product_image_url(src):
+                            if src.startswith('//'):
+                                src = 'https:' + src
+                            image_url = src
+                            print(f"    Found product image (CSS): {image_url[:80]}...")
+                            break
+                except Exception as e:
+                    pass
+            
+            # METHOD 3: Fallback to page source regex (using cached page_source)
             if not image_url:
                 # First, prioritize product images from Master_Variants
-                img_tag_pattern = r'<img[^>]+src=["\']([^"\']*oppictures[^"\']+)["\']'
-                matches = re.finditer(img_tag_pattern, page_source, re.IGNORECASE)
+                matches = img_tag_pattern_oppictures.finditer(page_source)
                 product_image_candidates = []
                 other_image_candidates = []
                 
@@ -559,7 +520,7 @@ def scrape_product_data(link, expected_unit, retry_count=0):
                         continue
                     if is_product_image_url(src):
                         product_image_candidates.append(src)
-                    elif is_image_url(src):
+                    elif 'oppictures.com' in src.lower():
                         other_image_candidates.append(src)
                 
                 # Use product images first
@@ -572,59 +533,63 @@ def scrape_product_data(link, expected_unit, retry_count=0):
                     if filtered_candidates:
                         image_url = filtered_candidates[0]
                         print(f"    Found image from page source (oppictures): {image_url[:80]}...")
-                    else:
-                        print(f"    Warning: Only tag images found in candidates, skipping...")
-                
-                # If still not found, look for any <img> tag with image extensions (but exclude tags)
-                if not image_url:
-                    img_tag_pattern = r'<img[^>]+src=["\']([^"\']+)["\']'
-                    matches = re.finditer(img_tag_pattern, page_source, re.IGNORECASE)
-                    for match in matches:
-                        src = match.group(1)
-                        # Skip tag images
-                        if '/tags/' in src.lower() or 'tags/' in src.lower() or 'tagoutlined' in src.lower():
-                            continue
-                        if is_image_url(src):
-                            # Skip common non-product images
-                            if any(skip in src.lower() for skip in ['logo', 'icon', 'banner', 'header', 'footer', 'button', 'arrow']):
-                                continue
-                            if src.startswith('//'):
-                                src = 'https:' + src
-                            image_url = src
-                            print(f"    Found image from page source: {image_url[:80]}...")
-                            break
                                 
         except Exception as e:
             print(f"    Error finding image: {e}")
         
         # 2. Scrape Product Name (Global Product Type from Product Details section)
-        # Learned pattern: Product name is in <td> element that follows "Global Product Type"
+        # OPTIMIZED: Use JavaScript for faster extraction
         product_name = None
         try:
-            # METHOD 1: Use specific XPath (learned from inspection - most reliable)
+            # METHOD 1: Use JavaScript to quickly find product name (faster than XPath)
             try:
-                # Find the td containing "Global Product Type" and get the following sibling td
-                name_element = driver.find_element(By.XPATH, "//td[contains(text(), 'Global Product Type')]/following-sibling::td[1]")
-                product_name = name_element.text.strip()
+                product_name = driver.execute_script("""
+                    var tds = document.querySelectorAll('td');
+                    for (var i = 0; i < tds.length; i++) {
+                        if (tds[i].textContent && tds[i].textContent.trim().indexOf('Global Product Type') !== -1) {
+                            var nextTd = tds[i].nextElementSibling;
+                            if (nextTd && nextTd.textContent) {
+                                var name = nextTd.textContent.trim();
+                                if (name && name !== 'Global Product Type' && name.length > 5) {
+                                    return name;
+                                }
+                            }
+                        }
+                    }
+                    return null;
+                """)
                 if product_name:
-                    print(f"    Found product name from td: {product_name}")
+                    print(f"    Found product name (JS): {product_name}")
             except:
-                # Alternative: Find all tds in the same row and get the one after "Global Product Type"
-                try:
-                    name_elements = driver.find_elements(By.XPATH, "//td[contains(text(), 'Global Product Type')]/../td")
-                    for elem in name_elements:
-                        text = elem.text.strip()
-                        if text and text != 'Global Product Type' and len(text) > 5:
-                            product_name = text
-                            print(f"    Found product name from alternative td: {product_name}")
-                            break
-                except:
-                    pass
+                pass
             
-            # METHOD 2: Fallback to page source pattern
+            # METHOD 2: Fallback to XPath (CSS :contains() is not standard)
             if not product_name:
-                pattern = r'Global Product Type[:\s]+([^\n<]+)'
-                match = re.search(pattern, page_source, re.IGNORECASE)
+                try:
+                    # Find the td containing "Global Product Type" and get the following sibling td
+                    name_element = driver.find_element(By.XPATH, "//td[contains(text(), 'Global Product Type')]/following-sibling::td[1]")
+                    product_name = name_element.text.strip()
+                    if product_name:
+                        print(f"    Found product name from td: {product_name}")
+                except:
+                    # Alternative: Find all tds and search
+                    try:
+                        name_elements = driver.find_elements(By.CSS_SELECTOR, "td")
+                        for i, elem in enumerate(name_elements):
+                            text = elem.text.strip()
+                            if 'Global Product Type' in text and i + 1 < len(name_elements):
+                                next_text = name_elements[i + 1].text.strip()
+                                if next_text and next_text != 'Global Product Type' and len(next_text) > 5:
+                                    product_name = next_text
+                                    print(f"    Found product name from alternative td: {product_name}")
+                                    break
+                    except:
+                        pass
+            
+            # METHOD 3: Fallback to page source pattern (using cached page_source)
+            if not product_name:
+                pattern = re.compile(r'Global Product Type[:\s]+([^\n<]+)', re.IGNORECASE)
+                match = pattern.search(page_source)
                 if match:
                     product_name = match.group(1).strip()
                     product_name = re.sub(r'<[^>]+>', '', product_name).strip()
@@ -634,197 +599,114 @@ def scrape_product_data(link, expected_unit, retry_count=0):
         except Exception as e:
             print(f"    Error finding product name: {e}")
         
-        # 3. Scrape Description
+        # 3. Scrape Description - OPTIMIZED for speed
         # Extract only the actual product description, excluding warnings, recommendations, pricing, and UI elements
-        # Based on screenshot: Description is located under "Description :" heading, ABOVE the Product Details table
         description = None
+        
+        # Pre-compile regex patterns for faster matching
+        html_tag_pattern = re.compile(r'<[^>]+>')
+        desc_pattern = re.compile(r'description\s*:?\s*', re.IGNORECASE)
+        stop_markers_pattern = re.compile(r'(Product Details|ADD TO LIST|People Who Bought|Also Consider|List price)', re.IGNORECASE)
+        price_pattern = re.compile(r'\$\d+[.,]\d+\s*/[A-Z]{2,4}', re.IGNORECASE)
         
         def clean_description_text(text):
             """Clean description text by removing HTML fragments, section markers, and unwanted content"""
             if not text:
                 return None
             
-            # Remove any remaining HTML tags and fragments (like "<fa", "<tr", etc.)
-            text = re.sub(r'<[^>]*$', '', text)  # Remove incomplete HTML tags at the end
-            text = re.sub(r'<[^>]+>', ' ', text)  # Remove complete HTML tags
-            text = re.sub(r'&[a-zA-Z]+;', ' ', text)  # Remove HTML entities that weren't decoded
+            # Remove any remaining HTML tags and fragments
+            text = html_tag_pattern.sub(' ', text)
+            text = html.unescape(text)
             
             # Remove section markers and UI elements at the end
-            end_markers = [
-                r'Product Details\*+\s*',
-                r'Global Product Type\s*',
-                r'ADD TO LIST\s*',
-                r'People Who Bought\s*',
-                r'Also Consider\s*',
-                r'List price\s*',
-                r'Choose other options\s*',
-                r'Select a Product\s*',
-            ]
-            for marker in end_markers:
-                text = re.sub(marker + r'.*$', '', text, flags=re.IGNORECASE)
+            text = stop_markers_pattern.sub('', text)
             
-            # Remove section markers and UI elements at the start
-            start_markers = [
-                r'^Product Details\*+\s*',
-                r'^Global Product Type\s*',
-                r'^Description\s*:?\s*',
-            ]
-            for marker in start_markers:
-                text = re.sub(marker, '', text, flags=re.IGNORECASE)
-            
-            # Remove any HTML-like fragments (incomplete tags, attributes, etc.)
-            text = re.sub(r'<[^>]*', '', text)  # Remove any remaining HTML fragments
-            text = re.sub(r'[<>]', '', text)  # Remove any stray angle brackets
+            # Remove the "Description :" or "Description:" prefix
+            text = desc_pattern.sub('', text, count=1)
             
             # Remove item numbers at the start
             text = re.sub(r'^[A-Z0-9]{6,15}\s+', '', text)
+            
+            # Remove price patterns
+            text = price_pattern.sub('', text)
             
             # Normalize whitespace
             text = ' '.join(text.split())
             text = text.strip()
             
-            # Remove trailing punctuation that might be from HTML (like "**", "***", etc.)
+            # Remove trailing punctuation
             text = re.sub(r'\*+\s*$', '', text)
             text = text.strip()
             
             return text if text else None
         
         try:
-            # Find "Description :" or "Description:" heading and extract text after it
-            desc_heading_patterns = [
-                'Description :',
-                'Description:',
-                'Description',
-            ]
+            # METHOD 1: Use JavaScript to quickly find description (faster than DOM traversal)
+            try:
+                description = driver.execute_script("""
+                    var elements = document.querySelectorAll('*');
+                    for (var i = 0; i < elements.length; i++) {
+                        var text = elements[i].textContent || '';
+                        if (text.indexOf('Description') !== -1 && (text.indexOf(':') !== -1 || text.indexOf(' :') !== -1)) {
+                            // Try to get text after "Description :"
+                            var match = text.match(/Description\\s*:?\\s*(.+?)(?:Product Details|ADD TO LIST|People Who|List price)/i);
+                            if (match && match[1]) {
+                                var desc = match[1].trim();
+                                if (desc.length >= 20 && desc.length <= 10000) {
+                                    return desc;
+                                }
+                            }
+                        }
+                    }
+                    return null;
+                """)
+                if description:
+                    description = clean_description_text(description)
+                    if description and 20 <= len(description) <= 10000:
+                        print(f"    Found description (JS): {len(description)} chars")
+                    else:
+                        description = None
+            except:
+                pass
             
-            desc_index = -1
-            found_pattern = None
-            for pattern in desc_heading_patterns:
-                desc_index = page_source.find(pattern)
-                if desc_index != -1:
-                    found_pattern = pattern
-                    break
-            
-            if desc_index != -1:
-                # Get text chunk after the description heading (10000 chars to handle long descriptions with HTML)
-                text_chunk = page_source[desc_index:desc_index + 10000]
-                
-                # Remove HTML tags and decode HTML entities
-                text_only = re.sub(r'<[^>]+>', ' ', text_chunk)
-                text_only = html.unescape(text_only)
-                text_only = ' '.join(text_only.split())
-                
-                # Remove the "Description :" or "Description:" prefix
-                text_only = re.sub(r'^description\s*:?\s*', '', text_only, flags=re.IGNORECASE)
-                text_only = text_only.strip()
-                
-                # The description ends when we hit "Product Details" or other section headers
-                # Only truncate if the marker appears near the END (last 20% of text) to avoid cutting mid-description
-                stop_markers = [
-                    'Product Details',
-                    'Product Details**',
-                    'Product Details***',
-                    'Global Product Type',
-                    'ADD TO LIST',
-                    'People Who Bought',
-                    'Also Consider',
-                    'List price',
-                ]
-                
-                # Find stop markers, but only truncate if they appear in the last portion of text (likely section boundary)
-                text_length = len(text_only)
-                for marker in stop_markers:
-                    marker_pos = text_only.find(marker)
-                    if marker_pos != -1:
-                        # Only truncate if marker is in the last 30% of text (likely a section boundary, not mid-description)
-                        if marker_pos > text_length * 0.7:
-                            text_only = text_only[:marker_pos].strip()
-                            break
-                
-                # Clean up: remove item numbers at the start
-                text_only = re.sub(r'^[A-Z0-9]{6,15}\s+', '', text_only)
-                
-                # Filter out unwanted patterns
-                text_lower = text_only.lower()
-                excluded_patterns = [
-                    'add to list',
-                    'people who bought',
-                    'also bought',
-                    'choose other options',
-                    'select a product',
-                    'list price',
-                    'non-stock item',
-                    'extended delivery time',
-                    'warning:',
-                    'p65',
-                ]
-                
-                # Check if text contains excluded patterns - if so, truncate before them
-                for exclude in excluded_patterns:
-                    exclude_pos = text_lower.find(exclude)
-                    if exclude_pos != -1:
-                        text_only = text_only[:exclude_pos].strip()
+            # METHOD 2: Fallback to page source pattern (using cached page_source)
+            if not description:
+                desc_heading_patterns = ['Description :', 'Description:', 'Description']
+                desc_index = -1
+                for pattern in desc_heading_patterns:
+                    desc_index = page_source.find(pattern)
+                    if desc_index != -1:
                         break
                 
-                # Remove price patterns
-                text_only = re.sub(r'\$\d+[.,]\d+\s*/[A-Z]{2,4}', '', text_only, flags=re.IGNORECASE)
-                
-                # Clean the description text (remove HTML fragments, section markers, etc.)
-                text_only = clean_description_text(text_only)
-                
-                # Final validation: must be reasonable length (20-10000 chars) and not empty
-                if text_only and 20 <= len(text_only) <= 10000:
-                    description = text_only
-        except Exception as e:
-            pass  # Silently continue to DOM fallback
+                if desc_index != -1:
+                    # Get text chunk after the description heading
+                    text_chunk = page_source[desc_index:desc_index + 10000]
+                    
+                    # Remove HTML tags and decode HTML entities
+                    text_only = html_tag_pattern.sub(' ', text_chunk)
+                    text_only = html.unescape(text_only)
+                    text_only = ' '.join(text_only.split())
+                    
+                    # Remove the "Description :" prefix
+                    text_only = desc_pattern.sub('', text_only, count=1)
+                    text_only = text_only.strip()
+                    
+                    # Find stop markers and truncate if in last 30% of text
+                    text_length = len(text_only)
+                    stop_match = stop_markers_pattern.search(text_only)
+                    if stop_match and stop_match.start() > text_length * 0.7:
+                        text_only = text_only[:stop_match.start()].strip()
+                    
+                    # Clean the description text
+                    text_only = clean_description_text(text_only)
+                    
+                    # Final validation
+                    if text_only and 20 <= len(text_only) <= 10000:
+                        description = text_only
+                        print(f"    Found description (page source): {len(description)} chars")
         
-        # If page source method didn't work, try DOM-based method
-        if not description:
-            try:
-                desc_heading_xpaths = [
-                    "//*[contains(text(), 'Description :')]",
-                    "//*[contains(text(), 'Description:')]",
-                    "//*[contains(., 'Description') and (contains(., ':') or contains(., ' :'))]",
-                ]
-                
-                for xpath in desc_heading_xpaths:
-                    try:
-                        elements = driver.find_elements(By.XPATH, xpath)
-                        for elem in elements:
-                            text = elem.text.strip()
-                            if 'description' in text.lower() and ':' in text:
-                                # Try to get parent and find text after "Description :"
-                                try:
-                                    parent = elem.find_element(By.XPATH, "./..")
-                                    parent_text = parent.text.strip()
-                                    desc_match = re.search(r'description\s*:?\s*(.+?)(?:\n|$|Product Details|ADD TO LIST|People Who)', parent_text, re.IGNORECASE | re.DOTALL)
-                                    if desc_match:
-                                        desc_text = desc_match.group(1).strip()
-                                        desc_text = clean_description_text(desc_text)
-                                        if desc_text and 20 <= len(desc_text) <= 10000:
-                                            description = desc_text
-                                            break
-                                except:
-                                    pass
-                                
-                                # Alternative: get following sibling
-                                try:
-                                    next_sibling = elem.find_element(By.XPATH, "./following-sibling::*[1]")
-                                    desc_text = next_sibling.text.strip()
-                                    desc_text = clean_description_text(desc_text)
-                                    if desc_text and 20 <= len(desc_text) <= 10000:
-                                        desc_lower = desc_text.lower()
-                                        if not any(exclude in desc_lower for exclude in ['add to list', 'people who bought', 'list price']):
-                                            description = desc_text
-                                            break
-                                except:
-                                    pass
-                        if description:
-                            break
-                    except:
-                        continue
-            except Exception:
-                pass
+        except Exception as e:
+            pass  # Silently continue
         return product_name, description, image_url, website_unit
         
     except TimeoutException:
@@ -839,7 +721,7 @@ def scrape_product_data(link, expected_unit, retry_count=0):
             driver.get("about:blank")
         except:
             pass  # Ignore if navigation fails
-        time.sleep(0.5)  # Brief pause to let browser recover
+        time.sleep(0.2)  # Brief pause to let browser recover (optimized)
         return "Timeout error", "Timeout error", "Timeout error", None
     except (ReadTimeoutError, Urllib3ConnectionError, socket.timeout, ConnectionResetError) as e:
         error_msg = str(e).lower()
@@ -1074,7 +956,7 @@ def process_products(start_idx=0, end_idx=None, test_mode=False):
                 retry_count += 1
                 if retry_count <= max_retries:
                     print(f"    🔄 Retrying ({retry_count}/{max_retries})...")
-                    time.sleep(2)  # Longer pause before retry to let connections reset
+                    time.sleep(1)  # Pause before retry (reduced from 2s)
             
             # Display scraping results
             print(f"\n📥 Scraping Results:")
@@ -1177,8 +1059,8 @@ def process_products(start_idx=0, end_idx=None, test_mode=False):
                 df.to_excel(excel_path, index=False)
                 print(f"Progress saved! (Processed: {processed_count}, Skipped: {skipped_count}, Errors: {error_count})\n")
             
-            # Small delay to avoid overwhelming the server (reduced)
-            time.sleep(0.5)
+            # Small delay to avoid overwhelming the server (optimized)
+            time.sleep(0.2)
             
             # Check if browser is still responsive (quick check to prevent getting stuck)
             try:
