@@ -453,34 +453,60 @@ def scrape_product_data(link, expected_unit, retry_count=0):
                 if not url:
                     return False
                 url_lower = url.lower()
-                # Exclude tag/rebate images
-                if '/tags/' in url_lower or 'tags/' in url_lower or 'tagoutlined' in url_lower:
+                # Exclude tag/rebate images - check for various patterns (case-insensitive)
+                tag_indicators = [
+                    '/tags/', 'tags/', 'tagoutlined', 'tag-outlined', 'rebate',
+                    'master_images/tags', 'master_images\\tags',  # Handle both slashes
+                    'tagoutlined-rebate', 'tag-outlined-rebate'
+                ]
+                if any(indicator in url_lower for indicator in tag_indicators):
+                    return False
+                # Exclude if path contains "Tags" folder (case-insensitive check)
+                if '/tags' in url_lower or '\\tags' in url_lower or 'tags/' in url_lower or 'tags\\' in url_lower:
                     return False
                 # Prioritize actual product images from Master_Variants
                 if 'master_variants' in url_lower or 'variant_' in url_lower:
                     return True
                 # Also accept other oppictures images that aren't tags
-                if 'oppictures.com' in url_lower and '/tags/' not in url_lower:
-                    return True
+                if 'oppictures.com' in url_lower:
+                    # Double-check: make sure it's not in a Tags folder
+                    if '/tags' not in url_lower and '\\tags' not in url_lower and 'tags/' not in url_lower:
+                        return True
                 return False
             
             # METHOD 1: Use JavaScript to quickly find product images (faster than Selenium)
             try:
                 # Use JavaScript to find images with oppictures in src (much faster)
+                # Make sure to exclude tag/rebate images with case-insensitive checks
                 img_srcs = driver.execute_script("""
                     var imgs = document.querySelectorAll('img[src*="oppictures"]');
-                    var srcs = [];
+                    var productImages = [];
+                    var otherImages = [];
                     for (var i = 0; i < imgs.length; i++) {
-                        var src = imgs[i].src;
-                        if (src && src.indexOf('/tags/') === -1 && src.indexOf('tagoutlined') === -1) {
-                            if (src.indexOf('master_variants') !== -1 || src.indexOf('variant_') !== -1) {
-                                srcs.unshift(src); // Prioritize product images
-                            } else {
-                                srcs.push(src);
+                        var src = imgs[i].src || '';
+                        var srcLower = src.toLowerCase();
+                        // Exclude tag/rebate images (case-insensitive)
+                        if (srcLower.indexOf('/tags/') !== -1 || 
+                            srcLower.indexOf('tags/') !== -1 ||
+                            srcLower.indexOf('tagoutlined') !== -1 ||
+                            srcLower.indexOf('tag-outlined') !== -1 ||
+                            srcLower.indexOf('rebate') !== -1 ||
+                            srcLower.indexOf('master_images/tags') !== -1 ||
+                            srcLower.indexOf('master_images\\\\tags') !== -1) {
+                            continue; // Skip tag/rebate images
+                        }
+                        // Prioritize actual product images from Master_Variants
+                        if (srcLower.indexOf('master_variants') !== -1 || srcLower.indexOf('variant_') !== -1) {
+                            productImages.push(src);
+                        } else if (srcLower.indexOf('oppictures.com') !== -1) {
+                            // Only add if not in Tags folder
+                            if (srcLower.indexOf('/tags') === -1 && srcLower.indexOf('\\\\tags') === -1) {
+                                otherImages.push(src);
                             }
                         }
                     }
-                    return srcs;
+                    // Return product images first, then other images
+                    return productImages.concat(otherImages);
                 """)
                 
                 if img_srcs and len(img_srcs) > 0:
@@ -515,27 +541,62 @@ def scrape_product_data(link, expected_unit, retry_count=0):
                     src = match.group(1)
                     if src.startswith('//'):
                         src = 'https:' + src
-                    # Skip tag images
-                    if '/tags/' in src.lower() or 'tags/' in src.lower() or 'tagoutlined' in src.lower():
+                    src_lower = src.lower()
+                    # Skip tag/rebate images with comprehensive case-insensitive checks
+                    tag_indicators = [
+                        '/tags/', 'tags/', 'tagoutlined', 'tag-outlined', 'rebate',
+                        'master_images/tags', 'master_images\\tags'
+                    ]
+                    if any(indicator in src_lower for indicator in tag_indicators):
                         continue
+                    # Also check for Tags folder (case-insensitive)
+                    if '/tags' in src_lower or '\\tags' in src_lower or 'tags/' in src_lower or 'tags\\' in src_lower:
+                        continue
+                    # Check if it's a valid product image
                     if is_product_image_url(src):
                         product_image_candidates.append(src)
-                    elif 'oppictures.com' in src.lower():
-                        other_image_candidates.append(src)
+                    elif 'oppictures.com' in src_lower:
+                        # Double-check it's not a tag image
+                        if not any(indicator in src_lower for indicator in tag_indicators):
+                            other_image_candidates.append(src)
                 
                 # Use product images first
                 if product_image_candidates:
                     image_url = product_image_candidates[0]
                     print(f"    Found product image from page source (Master_Variants): {image_url[:80]}...")
                 elif other_image_candidates:
-                    # Filter out any tag images that might have slipped through
-                    filtered_candidates = [c for c in other_image_candidates if '/tags/' not in c.lower() and 'tagoutlined' not in c.lower()]
+                    # Filter out any tag images that might have slipped through (extra safety check)
+                    filtered_candidates = []
+                    for c in other_image_candidates:
+                        c_lower = c.lower()
+                        # Exclude if contains any tag indicators
+                        if not any(indicator in c_lower for indicator in ['/tags/', 'tags/', 'tagoutlined', 'rebate', '/tags', '\\tags']):
+                            filtered_candidates.append(c)
                     if filtered_candidates:
                         image_url = filtered_candidates[0]
                         print(f"    Found image from page source (oppictures): {image_url[:80]}...")
+                    else:
+                        print(f"    Warning: All candidates were tag/rebate images, skipping...")
                                 
         except Exception as e:
             print(f"    Error finding image: {e}")
+        
+        # Final validation: Make absolutely sure we never return a tag/rebate image
+        if image_url:
+            url_lower = image_url.lower()
+            tag_indicators = [
+                '/tags/', 'tags/', 'tagoutlined', 'tag-outlined', 'rebate',
+                'master_images/tags', 'master_images\\tags',
+                'tagoutlined-rebate', 'tag-outlined-rebate'
+            ]
+            # Check if it's a tag/rebate image
+            if any(indicator in url_lower for indicator in tag_indicators):
+                print(f"    ⚠️  Rejected tag/rebate image: {image_url[:80]}...")
+                image_url = None
+            # Also check for Tags folder in path
+            elif '/tags' in url_lower or '\\tags' in url_lower or 'tags/' in url_lower or 'tags\\' in url_lower:
+                print(f"    ⚠️  Rejected image from Tags folder: {image_url[:80]}...")
+                image_url = None
         
         # 2. Scrape Product Name (Global Product Type from Product Details section)
         # OPTIMIZED: Use JavaScript for faster extraction
@@ -775,13 +836,15 @@ def scrape_product_data(link, expected_unit, retry_count=0):
             print(f"    Error scraping: {e}")
             return None, None, None, None
 
-def process_products(start_idx=0, end_idx=None, test_mode=False):
+def process_products(start_idx=0, end_idx=None, test_mode=False, recheck_not_found=False, specific_indices=None):
     """Process products from start_idx to end_idx (inclusive)
     
     Args:
         start_idx: Starting row index (0-based)
         end_idx: Ending row index (0-based, None for last row)
         test_mode: If True, indicates test mode (currently no special behavior)
+        recheck_not_found: If True, will recheck products marked "Product not found" instead of skipping them
+        specific_indices: Optional list of specific indices to process (only processes these indices if provided)
     """
     global df
     
@@ -811,8 +874,18 @@ def process_products(start_idx=0, end_idx=None, test_mode=False):
     if image_url_col in df.columns:
         df[image_url_col] = df[image_url_col].astype(str).replace('nan', '')
     
-    total_to_process = end_idx - start_idx + 1
-    print(f"\nProcessing products from row {start_idx + 1} to {end_idx + 1} ({total_to_process} products)...\n")
+    # Calculate total to process
+    if specific_indices is not None:
+        indices_to_process = [idx for idx in specific_indices if start_idx <= idx <= end_idx]
+        total_to_process = len(indices_to_process)
+        if total_to_process > 0:
+            print(f"\nProcessing {total_to_process} products (specific indices)...\n")
+        else:
+            print(f"\nNo products to process in the specified range.\n")
+            return
+    else:
+        total_to_process = end_idx - start_idx + 1
+        print(f"\nProcessing products from row {start_idx + 1} to {end_idx + 1} ({total_to_process} products)...\n")
     
     processed_count = 0
     skipped_count = 0
@@ -851,7 +924,13 @@ def process_products(start_idx=0, end_idx=None, test_mode=False):
                 break
     
     try:
-        for idx in range(start_idx, end_idx + 1):
+        # If specific_indices is provided, only process those indices
+        if specific_indices is not None:
+            indices_to_process = [idx for idx in specific_indices if start_idx <= idx <= end_idx]
+        else:
+            indices_to_process = list(range(start_idx, end_idx + 1))
+        
+        for idx in indices_to_process:
             row = df.iloc[idx]
             
             # Get item number for display
@@ -909,12 +988,20 @@ def process_products(start_idx=0, end_idx=None, test_mode=False):
             print(f"   {img_emoji} Image URL: {img_status}")
             
             # Skip if any column has "Product not found" (product wasn't found on website)
-            if (current_product_name == 'Product not found' or 
-                current_description == 'Product not found' or 
-                current_image_url == 'Product not found'):
-                print(f"\n  ⏭️  Already marked as 'Product not found', skipping...")
-                skipped_count += 1
-                continue
+            # Unless we're in recheck mode
+            if not recheck_not_found:
+                if (current_product_name == 'Product not found' or 
+                    current_description == 'Product not found' or 
+                    current_image_url == 'Product not found'):
+                    print(f"\n  ⏭️  Already marked as 'Product not found', skipping...")
+                    skipped_count += 1
+                    continue
+            else:
+                # In recheck mode, show that we're rechecking
+                if (current_product_name == 'Product not found' or 
+                    current_description == 'Product not found' or 
+                    current_image_url == 'Product not found'):
+                    print(f"\n  🔄 Rechecking product previously marked as 'Product not found'...")
             
             # Count how many columns have valid data (not empty, not error messages)
             filled_count = 0
@@ -1053,8 +1140,8 @@ def process_products(start_idx=0, end_idx=None, test_mode=False):
                 print(f"   ❌ Error: No data returned from scraper")
                 error_count += 1
             
-            # Save progress (every 10 products)
-            if processed_count % 10 == 0 and processed_count > 0:
+            # Save progress (every 20 products)
+            if processed_count % 20 == 0 and processed_count > 0:
                 print(f"\nSaving progress...")
                 df.to_excel(excel_path, index=False)
                 print(f"Progress saved! (Processed: {processed_count}, Skipped: {skipped_count}, Errors: {error_count})\n")
@@ -1097,6 +1184,25 @@ def process_products(start_idx=0, end_idx=None, test_mode=False):
         print("\nExiting gracefully...")
         raise  # Re-raise to exit the function
 
+def find_products_not_found():
+    """Find all row indices where any column has 'Product not found'"""
+    global df
+    not_found_indices = []
+    
+    for idx in range(len(df)):
+        row = df.iloc[idx]
+        current_product_name = str(row[product_name_col]).strip() if pd.notna(row[product_name_col]) else ''
+        current_description = str(row[description_col]).strip() if pd.notna(row[description_col]) else ''
+        current_image_url = str(row[image_url_col]).strip() if pd.notna(row[image_url_col]) else ''
+        
+        # Check if any column has "Product not found"
+        if (current_product_name == 'Product not found' or 
+            current_description == 'Product not found' or 
+            current_image_url == 'Product not found'):
+            not_found_indices.append(idx)
+    
+    return not_found_indices
+
 def display_menu():
     """Display the main menu"""
     print("\n" + "="*60)
@@ -1107,21 +1213,22 @@ def display_menu():
     print("3. Scrape products in a range (e.g., 100-2000)")
     print("4. Scrape from a specific product to end")
     print("5. Scrape a single product by Item Number")
-    print("6. Exit")
+    print("6. Recheck products marked 'Product not found'")
+    print("7. Exit")
     print("\n" + "="*60)
 
 def get_user_choice():
     """Get user's menu choice"""
     while True:
         try:
-            choice = input("\nEnter your choice (1-6): ").strip()
-            if choice in ['1', '2', '3', '4', '5', '6']:
+            choice = input("\nEnter your choice (1-7): ").strip()
+            if choice in ['1', '2', '3', '4', '5', '6', '7']:
                 return choice
             else:
-                print("Invalid choice. Please enter a number between 1 and 6.")
+                print("Invalid choice. Please enter a number between 1 and 7.")
         except KeyboardInterrupt:
             print("\n\nExiting...")
-            return '6'
+            return '7'
 
 def get_range_input(total_rows):
     """Get range input from user - asks for start first, then end"""
@@ -1292,12 +1399,59 @@ while True:
             process_products(row_idx, row_idx, test_mode=True)
     
     elif choice == '6':
+        # Recheck products marked 'Product not found'
+        print("\nFinding products marked 'Product not found'...")
+        not_found_indices = find_products_not_found()
+        
+        if len(not_found_indices) == 0:
+            print("\n✅ No products found with 'Product not found' status.")
+            print("All products have been successfully scraped or are in a different error state.")
+        else:
+            print(f"\nFound {len(not_found_indices)} products marked 'Product not found'.")
+            print("These products will be rechecked.")
+            
+            # Display some info about which columns have "Product not found"
+            product_name_count = 0
+            description_count = 0
+            image_url_count = 0
+            
+            for idx in not_found_indices:
+                row = df.iloc[idx]
+                if str(row[product_name_col]).strip() == 'Product not found':
+                    product_name_count += 1
+                if str(row[description_col]).strip() == 'Product not found':
+                    description_count += 1
+                if str(row[image_url_col]).strip() == 'Product not found':
+                    image_url_count += 1
+            
+            print(f"\nBreakdown:")
+            print(f"  - Product Name: {product_name_count} products")
+            print(f"  - Description: {description_count} products")
+            print(f"  - Image URL: {image_url_count} products")
+            
+            confirm = input(f"\nRecheck these {len(not_found_indices)} products? (y/n): ").strip().lower()
+            if confirm == 'y':
+                # Sort indices to process in order
+                not_found_indices.sort()
+                
+                # Process all products with "Product not found" in one batch
+                if len(not_found_indices) > 0:
+                    first_idx = not_found_indices[0]
+                    last_idx = not_found_indices[-1]
+                    
+                    # Process all products in one batch call with specific_indices
+                    print(f"\nStarting recheck of {len(not_found_indices)} products...")
+                    process_products(first_idx, last_idx, test_mode=False, recheck_not_found=True, specific_indices=not_found_indices)
+            else:
+                print("Cancelled.")
+    
+    elif choice == '7':
         # Exit
         print("\nExiting...")
         break
     
     # Ask if user wants to continue
-    if choice != '6':
+    if choice != '7':
         continue_choice = input("\nDo you want to perform another operation? (y/n): ").strip().lower()
         if continue_choice != 'y':
             break
