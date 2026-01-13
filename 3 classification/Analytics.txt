@@ -1,0 +1,38 @@
+======================================================================
+CATEGORIZATION COMPLETE
+======================================================================
+
+Total products processed: 18409
+Products categorized: 18409
+Products skipped: 0
+Products marked as 'Product not found': 2293
+Products marked as Anonymous: 977
+Low confidence (<50%): 2249
+Average confidence: 73.7%
+Min confidence: 0.0%
+Max confidence: 100.0%
+
+Category Distribution:
+  Office Products & Supplies: 5899
+  Industrial Products & Services: 4876
+  Computer Hardware Solutions: 2322
+  Product not found: 2293
+  Furniture & Furnishings: 1231
+  Anonymous: 977
+  Information Technology Services: 568
+  Medical Equipment & Supplies: 243
+
+⚠️  2249 products have low confidence (<50%)
+Consider reviewing these manually for accuracy.
+
+❌ 2293 products were marked as 'Product not found'
+These products were not found on the website during scraping.
+
+📋 977 products were marked as 'Anonymous'
+These products didn't match any category well enough.
+You may want to review these and manually assign categories if needed.
+
+Results saved to: C:\Users\DELL\Desktop\Data Extractions For Hoopoe\ScrappedProducts.xlsx
+Backup saved to: C:\Users\DELL\Desktop\Data Extractions For Hoopoe\Backups\categorization_backup_20260113_205243.xlsx
+
+✅ Categorization completed successfully!
